@@ -104,6 +104,33 @@ class DashboardController extends Controller
         $recentUsers = User::latest()->take(5)->get();
         $recentCommandes = Commande::with(['client', 'items.piece.vehicle.casse'])->latest()->take(5)->get();
 
-        return view('dashboard.admin', compact('stats', 'commandesParMois', 'recentUsers', 'recentCommandes'));
+        $commandes = DB::table('commandes')
+        ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
+        ->groupBy('mois')
+        ->orderBy('mois')
+        ->get();
+
+    // Transformer les données pour Chart.js
+    $labels_chart = [];
+    $data = [];
+
+    foreach ($commandes as $commande) {
+        $labels_chart[] = date("F", mktime(0, 0, 0, $commande->mois, 1)); // Nom du mois
+        $data[] = $commande->total;
+    }
+
+       $clientsInscrits = DB::table('users')
+        ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
+        ->where('role', 'client')
+        ->groupBy('mois')
+        ->orderBy('mois')
+        ->get();
+
+    $dataClients = [];
+    foreach ($clientsInscrits as $cli) {
+        $dataClients[] = $cli->total;
+    }
+
+        return view('dashboard.admin', compact('stats', 'commandesParMois', 'recentUsers', 'recentCommandes', 'data', 'labels_chart', 'dataClients'));
     }
 }

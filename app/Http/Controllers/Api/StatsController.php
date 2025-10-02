@@ -31,6 +31,8 @@ class StatsController extends Controller
     {
         $user = Auth::user();
 
+        $data = [];
+
         $stats = [
             'vehicles_total' => $user->vehicles()->count(),
             'pieces_total' => Piece::whereHas('vehicle', function ($query) use ($user) {
@@ -61,9 +63,26 @@ class StatsController extends Controller
             ];
         }
 
-        return response()->json([
+         $commandes = DB::table('commandes')
+        ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
+        ->groupBy('mois')
+        ->orderBy('mois')
+        ->get();
+
+    // Transformer les données pour Chart.js
+    $labels = [];
+    $data = [];
+
+    foreach ($commandes as $commande) {
+        $labels[] = date("F", mktime(0, 0, 0, $commande->mois, 1)); // Nom du mois
+        $data[] = $commande->total;
+    }
+
+      return response()->json([
             'stats' => $stats,
-            'ventes_par_mois' => $ventesParMois
+            'ventes_par_mois' => $ventesParMois,
+            'labels' => $labels,
+            'data' => $data
         ]);
     }
 

@@ -86,7 +86,8 @@ class StatsController extends Controller
             'vehicules_total' => Vehicle::count(),
             'pieces_total' => Piece::count(),
             'commandes_total' => Commande::count(),
-            'ca_total' => Commande::where('statut_paiement', 'paye')->sum('total')
+            'ca_total' => Commande::where('statut_paiement', 'paye')->sum('total'),
+            'data' => $data
         ];
 
         // Évolution des inscriptions
@@ -115,6 +116,23 @@ class StatsController extends Controller
             ->take(10)
             ->get();
 
-        return view('stats.admin', compact('stats', 'inscriptionsParMois', 'topCasses'));
+        $commandes = DB::table('commandes')
+        ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
+        ->groupBy('mois')
+        ->orderBy('mois')
+        ->get();
+
+    // Transformer les données pour Chart.js
+    $labels = [];
+    $data = [];
+
+    foreach ($commandes as $commande) {
+        $labels[] = date("F", mktime(0, 0, 0, $commande->mois, 1)); // Nom du mois
+        $data[] = $commande->total;
+    }
+
+
+
+        return view('stats.admin', compact('stats', 'inscriptionsParMois', 'topCasses', 'data', 'labels'));
     }
 }

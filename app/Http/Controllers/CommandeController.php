@@ -139,6 +139,11 @@ class CommandeController extends Controller
         return view('commandes.show', compact('commande'));
     }
 
+    //rediriger
+    public function editStatut(Commande $commande){
+        return view('commandes.edit', compact('commande'));;
+    }
+
     // Mise à jour du statut pour la casse
     public function updateStatut(Request $request, Commande $commande)
     {
@@ -203,6 +208,10 @@ class CommandeController extends Controller
             'adresse_livraison' => $adresseGeo . "\n" . $commande->adresse_livraison
         ]);
 
+        
+
         return back()->with('success', 'Adresse de livraison mise à jour avec votre géolocalisation.');
     }
+
+
 }

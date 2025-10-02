@@ -120,6 +120,9 @@ function openGeoPicker() {
             document.getElementById('latitude').value = lat;
             document.getElementById('longitude').value = lon;
 
+            let adresse = document.getElementById('adresse_livraison');
+            adresse.value = `${lat}, ${lon}`
+            console.log(adresse);
             alert(`Votre position a été ajoutée.\nLatitude: ${lat}\nLongitude: ${lon}`);
         }, err => {
             alert('Impossible de récupérer votre position: ' + err.message);

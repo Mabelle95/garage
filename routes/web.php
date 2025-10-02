@@ -117,6 +117,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Détail commande
         Route::get('/commandes/{commande}', [CommandeController::class, 'show'])->name('commandes.show');
 
+        //Redirection vers le formulaire de mise à jour
+        Route::get('/commandes/{commande}/statut/form', [CommandeController::class, 'editStatut'])->name('commandes.edit-statut');
+
         // Mise à jour statut
         Route::put('/commandes/{commande}/statut', [CommandeController::class, 'updateStatut'])->name('commandes.update-statut');
 
@@ -141,7 +144,23 @@ Route::middleware(['auth', 'verified'])->group(function () {
             $casses = User::with('vehicles', 'pieces')->where('role', 'casse')->get();
             $clients = User::with('commandes')->where('role', 'client')->get();
 
-            return view('admin.dashboard', compact('casses', 'clients'));
+
+        $commandes = DB::table('commandes')
+        ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
+        ->groupBy('mois')
+        ->orderBy('mois')
+        ->get();
+
+    // Transformer les données pour Chart.js
+    $labels = [];
+    $data = [];
+
+    foreach ($commandes as $commande) {
+        $labels[] = date("F", mktime(0, 0, 0, $commande->mois, 1)); // Nom du mois
+        $data[] = $commande->total;
+    }
+
+            return view('admin.dashboard', compact('casses', 'clients', 'data', 'labels'));
         })->name('dashboard');
 
         // Gestion utilisateurs
