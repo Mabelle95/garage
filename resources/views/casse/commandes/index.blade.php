@@ -41,7 +41,7 @@
                             <p class="text-gray-900 whitespace-no-wrap font-bold">
                                 #{{ $commande->numero_commande }}
                             </p>
-                            <p class="text-gray-600 text-xs">{{ $commande->pieces->count() }} articles</p>
+                            <p class="text-gray-600 text-xs">{{ $commande->count() }} articles</p>
                         </td>
                         <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
                             <p class="text-gray-900 whitespace-no-wrap">{{ $commande->client->name }}</p>
@@ -76,6 +76,11 @@
                                     class="text-blue-600 hover:text-blue-900 text-sm">
                                 <i class="fas fa-eye mr-1"></i>Détails
                             </button>
+                            <a href="#" class="btn btn-sm btn-outline-primary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editStatutModal{{ $commande->id }}">
+                                                    <i class="fas fa-pen"></i>
+                                                </a>
                         </td>
                     </tr>
                     <tr id="details-{{ $commande->id }}" class="hidden">

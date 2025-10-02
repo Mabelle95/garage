@@ -10,7 +10,8 @@ use App\Http\Controllers\{
     SearchController,
     NotificationController,
     ProfileController,
-    VehicleController
+    VehicleController,
+    VenteEpaveController
 };
 use App\Models\User;
 use App\Models\Commande;
@@ -106,13 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('vehicles', VehicleController::class);
 
         // Commandes de la casse
-        Route::get('/commandes', function () {
-            $commandes = Commande::whereHas('items.piece.vehicle', function ($query) {
-                $query->where('casse_id', auth()->id());
-            })->with(['client', 'items.piece'])->latest()->paginate(10);
-
-            return view('casse.commandes.index', compact('commandes'));
-        })->name('commandes');
+        Route::get('/commandes', [CommandeController::class, 'index'])->name('commandes.index');
 
         // Détail commande
         Route::get('/commandes/{commande}', [CommandeController::class, 'show'])->name('commandes.show');
@@ -132,6 +127,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             return view('gestion.stocks', compact('vehicles', 'totalPieces', 'totalStock', 'piecesDisponibles'));
         })->name('stocks');
+        // Route::resource('epaves', VenteEpaveController::class)->names([
+        //     'index' => 'epaves.index',
+        //     'create' => 'epaves.create',
+        //     'store' => 'epaves.store',
+        //     'show' => 'epaves.show',
+        //     'edit' => 'epaves.edit',
+        //     'update' => 'epaves.update',
+        //     'destroy' => 'epaves.destroy',
+        // ]);
+
+        Route::get('/epaves', [VenteEpaveController::class, 'index'])->name('epaves.index');
+        Route::get('/epaves/{demande}', [VenteEpaveController::class, 'show'])->name('epaves.show');
     });
 
     // ----------------------
@@ -160,7 +167,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         $data[] = $commande->total;
     }
 
-            return view('admin.dashboard', compact('casses', 'clients', 'data', 'labels'));
+            return view('admin.dashboard', compact('casses', 'clients', 'data',));
         })->name('dashboard');
 
         // Gestion utilisateurs
@@ -182,3 +189,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('settings');
     });
 });
+ Route::get('/commandes', function () {
+            $commandes = Commande::whereHas('items.piece.vehicle', function ($query) {
+                $query->where('casse_id', auth()->id());
+            })->with(['client', 'items.piece'])->latest()->paginate(10);
+
+            return view('casse.commandes.index', compact('commandes'));
+        })->name('commandes');

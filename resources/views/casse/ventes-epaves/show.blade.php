@@ -7,7 +7,7 @@
     <div class="max-w-4xl mx-auto">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold">Évaluation du Véhicule</h1>
-            <a href="{{ route('casse.ventes-epaves') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
+            <a href="{{ route('gestion.epaves.index') }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">
                 <i class="fas fa-arrow-left mr-2"></i>Retour
             </a>
         </div>
@@ -16,27 +16,30 @@
             <h2 class="text-xl font-semibold mb-4">Informations du Véhicule</h2>
 
             <div class="grid grid-cols-2 gap-4 mb-4">
-                <div><strong>Marque:</strong> {{ $venteEpave->marque }}</div>
-                <div><strong>Modèle:</strong> {{ $venteEpave->modele }}</div>
-                <div><strong>Année:</strong> {{ $venteEpave->annee }}</div>
-                <div><strong>Immatriculation:</strong> {{ $venteEpave->immatriculation }}</div>
+                <div><strong>Marque:</strong> {{ $demande->marque }}</div>
+                <div><strong>Modèle:</strong> {{ $demande->modele }}</div>
+                <div><strong>Année:</strong> {{ $demande->annee }}</div>
+                <div><strong>Immatriculation:</strong> {{ $demande->immatriculation }}</div>
+                <div><strong>Email du client:</strong> {{ $demande->user->email }}</div>
+
+
             </div>
 
             <div class="mb-4">
                 <strong>Description:</strong>
-                <p class="text-gray-700 mt-1">{{ $venteEpave->description }}</p>
+                <p class="text-gray-700 mt-1">{{ $demande->description }}</p>
             </div>
 
             <div>
                 <strong>Prix souhaité par le client:</strong>
                 <p class="text-lg font-semibold text-blue-600">
-                    {{ $venteEpave->prix_souhaite ? number_format($venteEpave->prix_souhaite, 2) . ' FCFA' : 'Non spécifié' }}
+                    {{ $demande->prix_souhaite ? number_format($demande->prix_souhaite, 2) . ' FCFA' : 'Non spécifié' }}
                 </p>
             </div>
         </div>
 
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <form action="{{ route('casse.ventes-epaves.evaluer', $venteEpave) }}" method="POST">
+        {{-- <div class="bg-white shadow-md rounded-lg p-6">
+            <form action="{{ route('casse.ventes-epaves.evaluer', $demande) }}" method="POST">
                 @csrf
 
                 <div class="mb-6">
@@ -97,7 +100,7 @@
                         <i class="fas fa-paper-plane mr-2"></i>Envoyer l'évaluation
                     </button>
                 </div>
-            </form>
+            </form>--}}
         </div>
     </div>
 @endsection

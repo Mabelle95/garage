@@ -121,6 +121,8 @@
                                         <a href="{{ route('commandes.show', $commande) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-eye"></i> Détails
                                         </a>
+
+                                        
                                     </div>
                                 </td>
                             </tr>

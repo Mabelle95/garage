@@ -103,10 +103,10 @@
                                 <div class="col-sm-3"><strong>Nom de l'entreprise:</strong></div>
                                 <div class="col-sm-9">{{ auth()->user()->nom_entreprise }}</div>
                             </div>
-                            <div class="row mb-3">
+                            {{-- <div class="row mb-3">
                                 <div class="col-sm-3"><strong>SIRET:</strong></div>
                                 <div class="col-sm-9">{{ auth()->user()->siret ?? 'Non renseigné' }}</div>
-                            </div>
+                            </div> --}}
                             <div class="row mb-3">
                                 <div class="col-sm-3"><strong>Description:</strong></div>
                                 <div class="col-sm-9">{{ auth()->user()->description ?? 'Non renseignée' }}</div>

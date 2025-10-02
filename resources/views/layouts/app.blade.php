@@ -63,13 +63,18 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('gestion/commandes*') ? 'active' : '' }}" href="{{ route('gestion.commandes') }}">
+                            <a class="nav-link {{ Request::is('gestion/commandes*') ? 'active' : '' }}" href="{{ route('gestion.commandes.index') }}">
                                 <i class="fas fa-shopping-cart me-2"></i> Commandes clients
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {{ Request::is('gestion/stocks*') ? 'active' : '' }}" href="{{ route('gestion.stocks') }}">
                                 <i class="fas fa-boxes me-2"></i> Gestion des stocks
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::is('gestion/epaves*') ? 'active' : '' }}" href="{{ route('gestion.epaves.index') }}">
+                                <i class="fas fa-boxes me-2"></i> Epaves disponibles
                             </a>
                         </li>
                     @endif
@@ -90,7 +95,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('commandes*') ? 'active' : '' }}" href="{{ route('commandes.index') }}">
+                            <a class="nav-link {{ Request::is('commandes*') ? 'active' : '' }}" href="{{ route('commandes') }}">
                                 <i class="fas fa-list-alt me-2"></i> Mes commandes
                             </a>
                         </li>

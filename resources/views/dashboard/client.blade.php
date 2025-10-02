@@ -91,7 +91,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
                         <h6 class="m-0 font-weight-bold text-primary">Mes commandes récentes</h6>
-                        <a href="{{ route('commandes.index') }}" class="btn btn-sm btn-outline-primary">
+                        <a href="{{ route('commandes') }}" class="btn btn-sm btn-outline-primary">
                             Voir toutes
                         </a>
                     </div>
@@ -149,9 +149,9 @@
                 <!-- Mes demandes d'épaves -->
                 <div class="card shadow">
                     <div class="card-header py-3 d-flex justify-content-between align-items-center">
-                        <h6 class="m-0 font-weight-bold text-primary">Mes demandes d'épaves</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Vendre mes épaves</h6>
                         <a href="{{ route('demandes-epaves.create') }}" class="btn btn-sm btn-primary">
-                            <i class="fas fa-plus"></i> Nouvelle demande
+                            <i class="fas fa-plus"></i> Nouvelle épave
                         </a>
                     </div>
                     <div class="card-body">
@@ -191,7 +191,7 @@
                                 <i class="fas fa-car-crash fa-3x text-muted mb-2"></i>
                                 <p class="text-muted">Aucune demande d'épave</p>
                                 <a href="{{ route('demandes-epaves.create') }}" class="btn btn-primary btn-sm">
-                                    <i class="fas fa-plus"></i> Créer une demande
+                                    <i class="fas fa-plus"></i> Créer une épave
                                 </a>
                             </div>
                         @endif

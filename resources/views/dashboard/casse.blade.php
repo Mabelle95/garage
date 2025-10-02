@@ -202,9 +202,9 @@
                                                     </button>
                                                 </form> --}}
 
-                                                <a href={{ route('gestion.commandes.edit-statut', $commande) }}
+                                                {{-- <a href={{ route('gestion.commandes.edit-statut', $commande) }}
                                                     class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye"></i>
+                                                    <i class="fas fa-eye"></i> --}}
                                                 </a>
                                                 <a href="#" class="btn btn-sm btn-outline-primary"
                                                     data-bs-toggle="modal"

@@ -27,7 +27,7 @@
                     <button type="submit" class="btn btn-primary w-100">Filtrer</button>
                 </div>
                 <div class="col-md-2">
-                    <a href="{{ route('commandes.index') }}" class="btn btn-secondary w-100">Réinitialiser</a>
+                    <a href="{{ route('gestion.commandes.index') }}" class="btn btn-secondary w-100">Réinitialiser</a>
                 </div>
             </form>
         </div>
@@ -70,9 +70,12 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            <a href="{{ route('commandes.show', $commande) }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="fas fa-eye"></i> Détails
-                                            </a>
+
+                                             <a href="#" class="btn btn-sm btn-outline-primary"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editStatutModal{{ $commande->id }}">
+                                                    <i class="fas fa-pen"></i> Approuver
+                                                </a>
 
                                             @if($commande->statut === 'en_attente' && auth()->user()->isClient())
                                                 <form action="{{ route('commandes.annuler', $commande) }}" method="POST" class="d-inline">
@@ -109,4 +112,43 @@
         </div>
     </div>
 </div>
+
+{{-- Modal --}}
+    <div class="modal fade" id="editStatutModal{{ $commande->id }}" tabindex="-1" aria-labelledby="editStatutLabel{{ $commande->id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <!-- Header -->
+      <div class="modal-header">
+        <h5 class="modal-title" id="editStatutLabel{{ $commande->id }}">Modifier le statut</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+
+      <!-- Formulaire -->
+      <form action="{{ route('gestion.commandes.update-statut', $commande) }}" method="POST">
+          @csrf
+          @method("PUT")
+
+          <div class="modal-body">
+              <div class="mb-3">
+                  <label for="statut" class="form-label">Statut</label>
+                  <select id="statut" name="statut" class="form-select" required>
+                      <option value="en_attente" {{ $commande->statut == 'en_attente' ? 'selected' : '' }}>En attente</option>
+                      <option value="en_cours" {{ $commande->statut == 'en_cours' ? 'selected' : '' }}>En cours</option>
+                      <option value="livree" {{ $commande->statut == 'livree' ? 'selected' : '' }}>Livrée</option>
+                      <option value="annulee" {{ $commande->statut == 'annulee' ? 'selected' : '' }}>Annulée</option>
+                  </select>
+              </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+              <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 @endsection
