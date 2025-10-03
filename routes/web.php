@@ -109,6 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Commandes de la casse
         Route::get('/commandes', [CommandeController::class, 'index'])->name('commandes.index');
 
+
         // Détail commande
         Route::get('/commandes/{commande}', [CommandeController::class, 'show'])->name('commandes.show');
 
@@ -140,6 +141,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/epaves', [VenteEpaveController::class, 'index'])->name('epaves.index');
         Route::get('/epaves/{demande}', [VenteEpaveController::class, 'show'])->name('epaves.show');
     });
+    
 
     // ----------------------
     // Routes Admin

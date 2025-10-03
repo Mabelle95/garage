@@ -103,21 +103,13 @@
 
                     {{-- Menu Admin --}}
                     @if(auth()->user()->role->value === 'admin')
-                        {{-- <li class="nav-item">
-                            <a class="nav-link {{ Request::is('admin/dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
-                                <i class="fas fa-home me-2"></i> Tableau de bord Admin
-                            </a>
-                        </li> --}}
+
                         <li class="nav-item">
                             <a class="nav-link {{ Request::is('admin/users*') ? 'active' : '' }}" href="{{ route('admin.users.index') }}">
                                 <i class="fas fa-users me-2"></i> Utilisateurs (Casses & Clients)
                             </a>
                         </li>
-                        {{-- <li class="nav-item">
-                            <a class="nav-link {{ Request::is('admin/statistics*') ? 'active' : '' }}" href="{{ route('admin.statistics') }}">
-                                <i class="fas fa-chart-line me-2"></i> Statistiques
-                            </a>
-                        </li> --}}
+                        
                     @endif
 
                     <!-- Menu commun -->
