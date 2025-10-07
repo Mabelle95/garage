@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Piece;
-use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 
 class PieceController extends Controller
 {
@@ -16,10 +14,8 @@ class PieceController extends Controller
         $user = Auth::user();
 
         if ($user->isCasse()) {
-            // Vue casse : afficher toutes ses pièces avec les véhicules
-            $query = Piece::whereHas('vehicle', function($q) use($user) {
-                $q->where('casse_id', $user->id);
-            })->with(['vehicle']);
+            // Vue casse : toutes les pièces de l'utilisateur connecté
+            $query = Piece::where('user_id', $user->id);
 
             if ($request->filled('search')) {
                 $query->where('nom', 'like', '%' . $request->search . '%');
@@ -35,27 +31,21 @@ class PieceController extends Controller
 
             $pieces = $query->latest()->paginate(12);
 
-            // Marques et villes pour les filtres
-            $marques = Vehicle::where('casse_id', $user->id)->distinct()->pluck('marque');
-            $villes  = Piece::whereHas('vehicle', function($q) use($user) {
-                $q->where('casse_id', $user->id);
-            })->distinct()->pluck('ville')->filter();
+            // Marques et villes pour filtres dynamiques
+            $marques = $pieces->pluck('marque_piece')->unique()->filter();
+            $villes  = $pieces->pluck('ville')->unique()->filter();
 
             return view('pieces.index', compact('pieces', 'marques', 'villes'));
         } else {
             // Vue client : marketplace
-            $query = Piece::with(['vehicle.casse'])
-                ->where('disponible', true);
+            $query = Piece::where('disponible', true);
 
-            // Filtres
             if ($request->filled('search')) {
                 $query->where('nom', 'like', '%' . $request->search . '%');
             }
 
             if ($request->filled('marque')) {
-                $query->whereHas('vehicle', function($q) use($request) {
-                    $q->where('marque', $request->marque);
-                });
+                $query->where('marque_piece', $request->marque);
             }
 
             if ($request->filled('etat')) {
@@ -68,208 +58,167 @@ class PieceController extends Controller
 
             $pieces = $query->latest()->paginate(12);
 
-            // Filtres côté client
-            $marques = Vehicle::distinct()->pluck('marque');
-            $villes = Piece::distinct()->pluck('ville')->filter();
+            $marques = $pieces->pluck('marque_piece')->unique()->filter();
+            $villes  = $pieces->pluck('ville')->unique()->filter();
 
             return view('pieces.index', compact('pieces', 'marques', 'villes'));
         }
     }
 
-    public function create(Request $request)
+    public function create()
     {
         $this->authorize('create', Piece::class);
 
-        $vehicles = Auth::user()->vehicles;
-
-        return view('pieces.create', compact('vehicles'));
-    }
-
-    private function generateUniqueNumeroChassis(): string
-    {
-        $lastVehicle = Vehicle::orderBy('id', 'desc')->first();
-
-        if (!$lastVehicle) {
-            return 'CH-00001';
-        }
-
-        $lastNumber = (int) str_replace('CH-', '', $lastVehicle->numero_chassis);
-        $newNumber = $lastNumber + 1;
-
-        return 'CH-' . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+        return view('pieces.create');
     }
 
     public function store(Request $request)
     {
-        $this->authorize('create', Piece::class);
-
-        $rules = [
-            'vehicle_option' => 'required|in:existing,new',
-            'nom' => 'required|string|max:255',
-            'description' => 'required|string',
-            'prix' => 'required|numeric|min:0',
-            'quantite' => 'required|integer|min:1',
-            'etat_piece' => 'required|in:neuf,tres_bon,bon,moyen,usage',
-            'photos.*' => 'nullable|image|max:2048',
-            'reference_constructeur' => 'nullable|string',
-            'compatible_avec' => 'nullable|string',
-            'disponible' => 'boolean'
+        $messages = [
+            'nom.required' => 'Le nom de la pièce est obligatoire.',
+            'marque_piece.required' => 'La marque de la pièce est obligatoire.',
+            'modele_piece.required' => 'Le modèle de la pièce est obligatoire.',
+            'description.required' => 'La description est obligatoire.',
+            'prix.required' => 'Le prix de la pièce est obligatoire.',
+            'prix.numeric' => 'Le prix doit être un nombre valide.',
+            'prix.min' => 'Le prix doit être au moins de 500 FCFA.',
+            'quantite.required' => 'La quantité est obligatoire.',
+            'quantite.integer' => 'La quantité doit être un nombre entier.',
+            'quantite.min' => 'La quantité doit être au moins de 1.',
+            'etat.required' => "L'état de la pièce est obligatoire.",
+            'etat.max' => "L'état ne doit pas dépasser 255 caractères.",
+            'ville.required' => 'La ville est obligatoire.',
+            'ville.max' => 'La ville ne doit pas dépasser 255 caractères.',
+            'photos.*.image' => 'Chaque fichier doit être une image valide.',
+            'photos.*.max' => 'Chaque image ne doit pas dépasser 2 Mo.',
+            'reference_constructeur.required' => 'La référence constructeur est obligatoire.',
+            'reference_constructeur.max' => 'La référence constructeur ne doit pas dépasser 255 caractères.',
+            'compatible_avec.required' => 'Le champ "compatible avec" est obligatoire.',
+            'compatible_avec.string' => 'Le champ "compatible avec" doit être du texte.',
         ];
 
-        if ($request->vehicle_option === 'existing') {
-            $rules['vehicle_id'] = 'required|exists:vehicles,id';
-        } else {
-            $rules['marque'] = 'required|string|max:255';
-            $rules['modele'] = 'required|string|max:255';
-            $rules['annee'] = 'required|integer|min:1900|max:' . (date('Y') + 1);
-            $rules['numero_plaque'] = 'required|string|unique:vehicles';
-            $rules['couleur'] = 'required|string';
-            $rules['carburant'] = 'required|in:essence,diesel,hybride,electrique';
-            $rules['transmission'] = 'required|in:manuelle,automatique';
-            $rules['kilometrage'] = 'required|integer|min:0';
-            $rules['etat'] = 'required|in:bon,moyen,mauvais,epave';
-            $rules['prix_epave'] = 'required|numeric|min:0';
-            $rules['vehicle_description'] = 'nullable|string';
-            $rules['photo_principale'] = 'nullable|image|max:2048';
+        $validated = $request->validate([
+            'nom' => 'required|string|max:255',
+            'marque_piece' => 'required|string|max:255',
+            'modele_piece' => 'required|string|max:255',
+            'description' => 'required|string',
+            'prix' => 'required|numeric|min:500',
+            'quantite' => 'required|integer|min:1',
+            'etat' => 'required|string|max:255',
+            'photos.*' => 'nullable|image|max:2048',
+            'reference_constructeur' => 'required|string|max:255',
+            'compatible_avec' => 'required|string',
+            'disponible' => 'nullable', // <-- plus de 'boolean'
+            'ville' => 'required|string|max:255',
+        ], $messages);
+
+
+        // Gestion de la checkbox "disponible"
+        $validated['disponible'] = $request->has('disponible');
+
+        // Gestion des photos
+        if ($request->hasFile('photos')) {
+            $validated['photos'] = array_map(
+                fn($file) => $file->store('pieces', 'public'),
+                $request->file('photos')
+            );
         }
 
-        $validated = $request->validate($rules);
+        // Attribution de l'utilisateur connecté
+        $validated['user_id'] = Auth::id();
 
-        DB::beginTransaction();
-        try {
-            $vehicleId = null;
+        // Création de la pièce
+        Piece::create($validated);
 
-            if ($request->vehicle_option === 'existing') {
-                $vehicle = Vehicle::where('id', $validated['vehicle_id'])
-                    ->where('casse_id', Auth::id())
-                    ->firstOrFail();
-
-                $vehicleId = $vehicle->id;
-            } else {
-                $vehicleData = [
-                    'casse_id' => Auth::id(),
-                    'marque' => $validated['marque'],
-                    'modele' => $validated['modele'],
-                    'annee' => $validated['annee'],
-                    'numero_chassis' => $this->generateUniqueNumeroChassis(),
-                    'numero_plaque' => $validated['numero_plaque'],
-                    'couleur' => $validated['couleur'],
-                    'carburant' => $validated['carburant'],
-                    'transmission' => $validated['transmission'],
-                    'kilometrage' => $validated['kilometrage'],
-                    'etat' => $validated['etat'],
-                    'prix_epave' => $validated['prix_epave'],
-                    'date_arrivee' => now()->toDateString(),
-                    'description' => $validated['vehicle_description'] ?? null
-                ];
-
-                if ($request->hasFile('photo_principale')) {
-                    $vehicleData['photo_principale'] = $request->file('photo_principale')
-                        ->store('vehicles', 'public');
-                }
-
-                $vehicle = Vehicle::create($vehicleData);
-                $vehicleId = $vehicle->id;
-            }
-
-            $pieceData = [
-                'vehicle_id' => $vehicleId,
-                'nom' => $validated['nom'],
-                'description' => $validated['description'],
-                'prix' => $validated['prix'],
-                'quantite' => $validated['quantite'],
-                'etat' => $validated['etat_piece'],
-                'reference_constructeur' => $validated['reference_constructeur'] ?? null,
-                'compatible_avec' => $validated['compatible_avec'] ?? null,
-                'disponible' => $validated['disponible'],
-                'ville' => Auth::user()->casse->ville ?? 'Non définie', // ✅ enregistrer la ville
-            ];
-
-            if ($request->hasFile('photos')) {
-                $photos = [];
-                foreach ($request->file('photos') as $photo) {
-                    $photos[] = $photo->store('pieces', 'public');
-                }
-                $pieceData['photos'] = $photos;
-            }
-
-            $piece = Piece::create($pieceData);
-
-            DB::commit();
-
-            return redirect()->route('pieces.show', $piece)
-                ->with('success', 'Pièce ajoutée avec succès' . ($request->vehicle_option === 'new' ? ' (nouveau véhicule créé)' : '') . '.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->withInput()
-                ->with('error', 'Erreur lors de la création : ' . $e->getMessage());
-        }
+        return redirect()->route('pieces.index')
+            ->with('success', 'La pièce a été ajoutée avec succès.');
     }
 
     public function show(Piece $piece)
     {
-        $piece->load(['vehicle.casse']);
+        // Vérifier que la pièce appartient à l'utilisateur si nécessaire
+        if (Auth::user()->isCasse() && $piece->user_id !== Auth::id()) {
+            abort(403);
+        }
 
         $piecesSimilaires = Piece::where('nom', 'like', '%' . $piece->nom . '%')
             ->where('id', '!=', $piece->id)
             ->where('disponible', true)
-            ->with(['vehicle.casse'])
             ->limit(4)
             ->get();
 
-        $autresPiecesVehicule = Piece::where('vehicle_id', $piece->vehicle_id)
-            ->where('id', '!=', $piece->id)
-            ->where('disponible', true)
-            ->get();
-
-        return view('pieces.show', compact('piece', 'piecesSimilaires', 'autresPiecesVehicule'));
+        return view('pieces.show', compact('piece', 'piecesSimilaires'));
     }
 
     public function edit(Piece $piece)
     {
         $this->authorize('update', $piece);
-        $vehicle = $piece->vehicle;
 
-        return view('pieces.edit', compact('piece', 'vehicle'));
+        return view('pieces.edit', compact('piece'));
     }
 
     public function update(Request $request, Piece $piece)
     {
         $this->authorize('update', $piece);
 
+        $messages = [
+            'nom.required' => 'Le nom de la pièce est obligatoire.',
+            'marque_piece.required' => 'La marque de la pièce est obligatoire.',
+            'modele_piece.required' => 'Le modèle de la pièce est obligatoire.',
+            'description.required' => 'La description est obligatoire.',
+            'prix.required' => 'Le prix de la pièce est obligatoire.',
+            'prix.numeric' => 'Le prix doit être un nombre valide.',
+            'prix.min' => 'Le prix doit être au moins de 500 FCFA.',
+            'quantite.required' => 'La quantité est obligatoire.',
+            'quantite.integer' => 'La quantité doit être un nombre entier.',
+            'quantite.min' => 'La quantité doit être au moins de 1.',
+            'etat.required' => "L'état de la pièce est obligatoire.",
+            'etat.max' => "L'état ne doit pas dépasser 255 caractères.",
+            'ville.required' => 'La ville est obligatoire.',
+            'ville.max' => 'La ville ne doit pas dépasser 255 caractères.',
+            'reference_constructeur.required' => 'La référence constructeur est obligatoire.',
+            'reference_constructeur.max' => 'La référence constructeur ne doit pas dépasser 255 caractères.',
+            'compatible_avec.required' => 'Le champ "compatible avec" est obligatoire.',
+            'compatible_avec.string' => 'Le champ "compatible avec" doit être du texte.',
+            'photos.*.image' => 'Chaque fichier doit être une image valide.',
+            'photos.*.max' => 'Chaque image ne doit pas dépasser 2 Mo.',
+        ];
+
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
+            'marque_piece' => 'required|string|max:255',
+            'modele_piece' => 'required|string|max:255',
             'description' => 'required|string',
-            'prix' => 'required|numeric|min:0',
-            'quantite' => 'required|integer|min:0',
-            'etat' => 'required|in:neuf,tres_bon,bon,moyen,usage',
+            'prix' => 'required|numeric|min:500',
+            'quantite' => 'required|integer|min:1',
+            'etat' => 'required|string|max:255',
             'photos.*' => 'nullable|image|max:2048',
-            'reference_constructeur' => 'nullable|string',
-            'compatible_avec' => 'nullable|string',
-            'disponible' => 'boolean',
-            'ville' => 'nullable|string|max:255', // ✅ ajouter pour update
-        ]);
+            'reference_constructeur' => 'required|string|max:255',
+            'compatible_avec' => 'required|string',
+            'disponible' => 'nullable',
+            'ville' => 'required|string|max:255',
+        ], $messages);
 
+        // Gestion des photos
         if ($request->hasFile('photos')) {
             if ($piece->photos) {
                 foreach ($piece->photos as $photo) {
                     Storage::disk('public')->delete($photo);
                 }
             }
-            $photos = [];
-            foreach ($request->file('photos') as $photo) {
-                $photos[] = $photo->store('pieces', 'public');
-            }
-            $validated['photos'] = $photos;
+            $validated['photos'] = array_map(
+                fn($file) => $file->store('pieces', 'public'),
+                $request->file('photos')
+            );
         }
 
+        // Checkbox disponible
         $validated['disponible'] = $request->has('disponible');
 
         $piece->update($validated);
 
         return redirect()->route('pieces.show', $piece)
-            ->with('success', 'Pièce mise à jour avec succès.');
+            ->with('success', 'La pièce a été mise à jour avec succès.');
     }
 
     public function destroy(Piece $piece)

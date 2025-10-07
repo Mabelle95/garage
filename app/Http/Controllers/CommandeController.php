@@ -24,9 +24,10 @@ class CommandeController extends Controller
         $user = Auth::user();
 
         if ($user->isCasse()) {
-            $query = Commande::whereHas('items.piece.vehicle', function($query) use($user) {
-                $query->where('casse_id', $user->id);
-            })->with(['user', 'items.piece.vehicle']);
+            // Filtrer les commandes qui contiennent au moins une pièce appartenant à cette casse
+            $query = Commande::whereHas('items.piece', function($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })->with(['user', 'items.piece']);
 
             if ($request->filled('statut')) {
                 $query->where('statut', $request->statut);
@@ -34,7 +35,7 @@ class CommandeController extends Controller
 
             $commandes = $query->latest()->paginate(10);
         } else {
-            $query = $user->commandes()->with(['items.piece.vehicle.casse']);
+            $query = $user->commandes()->with(['items.piece']);
             if ($request->filled('statut')) {
                 $query->where('statut', $request->statut);
             }
@@ -47,7 +48,7 @@ class CommandeController extends Controller
     // Formulaire de création de commande
     public function create()
     {
-        $panier = Auth::user()->panier()->with(['items.piece.vehicle.casse'])->first();
+        $panier = Auth::user()->panier()->with(['items.piece'])->first();
 
         if (!$panier || $panier->items->isEmpty()) {
             return redirect()->route('panier.index')
@@ -76,7 +77,7 @@ class CommandeController extends Controller
             'longitude' => 'nullable|numeric',
         ]);
 
-        $panier = Auth::user()->panier()->with(['items.piece.vehicle.casse'])->first();
+        $panier = Auth::user()->panier()->with(['items.piece'])->first();
 
         if (!$panier || $panier->items->isEmpty()) {
             return redirect()->route('panier.index')
@@ -85,8 +86,7 @@ class CommandeController extends Controller
 
         foreach ($panier->items as $item) {
             if (!$item->piece->disponible || $item->piece->quantite < $item->quantite) {
-                return back()->with('error',
-                    "Stock insuffisant pour la pièce: {$item->piece->nom}");
+                return back()->with('error', "Stock insuffisant pour la pièce: {$item->piece->nom}");
             }
         }
 
@@ -115,15 +115,20 @@ class CommandeController extends Controller
                     'prix_unitaire' => $item->piece->prix
                 ]);
 
+                // Mettre à jour le stock
                 $item->piece->decrement('quantite', $item->quantite);
                 if ($item->piece->quantite <= 0) {
                     $item->piece->update(['disponible' => false]);
                 }
 
-                $this->notificationService->nouvelleCommande($item->piece->vehicle->casse, $commande);
+                // Notification à la casse propriétaire de la pièce
+                $this->notificationService->nouvelleCommande($item->piece->user, $commande);
             }
 
+            // Vider le panier
             $panier->items()->delete();
+
+            // Notification à l'utilisateur client
             $this->notificationService->commandeCreee(Auth::user(), $commande);
         });
 
@@ -135,13 +140,14 @@ class CommandeController extends Controller
     public function show(Commande $commande)
     {
         $this->authorize('view', $commande);
-        $commande->load(['user', 'items.piece.vehicle.casse']);
+        $commande->load(['user', 'items.piece']);
         return view('commandes.show', compact('commande'));
     }
 
-    //rediriger
-    public function editStatut(Commande $commande){
-        return view('commandes.edit', compact('commande'));;
+    // Formulaire pour modifier le statut
+    public function editStatut(Commande $commande)
+    {
+        return view('commandes.edit', compact('commande'));
     }
 
     // Mise à jour du statut pour la casse
@@ -180,7 +186,7 @@ class CommandeController extends Controller
             $commande->update(['statut' => 'annulee']);
 
             $casses = $commande->items->map(function($item) {
-                return $item->piece->vehicle->casse;
+                return $item->piece->user;
             })->unique();
 
             foreach ($casses as $casse) {
@@ -208,10 +214,6 @@ class CommandeController extends Controller
             'adresse_livraison' => $adresseGeo . "\n" . $commande->adresse_livraison
         ]);
 
-        
-
         return back()->with('success', 'Adresse de livraison mise à jour avec votre géolocalisation.');
     }
-
-
 }

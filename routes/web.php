@@ -1,4 +1,5 @@
 <?php
+
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
@@ -13,7 +14,7 @@ use App\Http\Controllers\{
     VehicleController,
     VenteEpaveController
 };
-use App\Models\User;
+use App\Http\Controllers\auth\AdminController;
 use App\Models\Commande;
 
 /*
@@ -39,7 +40,7 @@ require __DIR__ . '/auth.php';
 // ----------------------
 Route::middleware(['auth', 'verified'])->group(function () {
 
-    // Tableau de bord général
+    // Dashboard général
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Profil utilisateur
@@ -108,93 +109,72 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Commandes de la casse
         Route::get('/commandes', [CommandeController::class, 'index'])->name('commandes.index');
-
-
-        // Détail commande
         Route::get('/commandes/{commande}', [CommandeController::class, 'show'])->name('commandes.show');
-
-        //Redirection vers le formulaire de mise à jour
         Route::get('/commandes/{commande}/statut/form', [CommandeController::class, 'editStatut'])->name('commandes.edit-statut');
-
-        // Mise à jour statut
         Route::put('/commandes/{commande}/statut', [CommandeController::class, 'updateStatut'])->name('commandes.update-statut');
 
         // Stocks
         Route::get('/stocks', function () {
-               $vehicles = Auth::user()->vehicles()->with('pieces')->get();
-        $totalPieces = Auth::user()->pieces()->count();
-        $totalStock = Auth::user()->pieces()->sum('quantite');
-        $piecesDisponibles = Auth::user()->pieces()->where('disponible', true)->count();
+            $user = Auth::user();
 
-            return view('gestion.stocks', compact('vehicles', 'totalPieces', 'totalStock', 'piecesDisponibles'));
+            // Toutes les pièces de la casse (utilisateur connecté)
+            $pieces = $user->pieces()->get();
+
+            // Statistiques
+            $totalPieces = $pieces->count();
+            $totalStock = $pieces->sum('quantite');
+            $piecesDisponibles = $pieces->where('disponible', true)->count();
+
+            // Alertes de stock
+            $stockFaible = $pieces->where('quantite', '>', 0)->where('quantite', '<=', 3);
+            $stockVide = $pieces->where('quantite', 0);
+
+            return view('gestion.stocks', compact(
+                'pieces',
+                'totalPieces',
+                'totalStock',
+                'piecesDisponibles',
+                'stockFaible',
+                'stockVide'
+            ));
         })->name('stocks');
-        // Route::resource('epaves', VenteEpaveController::class)->names([
-        //     'index' => 'epaves.index',
-        //     'create' => 'epaves.create',
-        //     'store' => 'epaves.store',
-        //     'show' => 'epaves.show',
-        //     'edit' => 'epaves.edit',
-        //     'update' => 'epaves.update',
-        //     'destroy' => 'epaves.destroy',
-        // ]);
 
+        // Epaves
         Route::get('/epaves', [VenteEpaveController::class, 'index'])->name('epaves.index');
         Route::get('/epaves/{demande}', [VenteEpaveController::class, 'show'])->name('epaves.show');
     });
-    
 
     // ----------------------
     // Routes Admin
     // ----------------------
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
 
-        // Dashboard Admin
-        Route::get('/dashboard', function () {
-            $casses = User::with('vehicles', 'pieces')->where('role', 'casse')->get();
-            $clients = User::with('commandes')->where('role', 'client')->get();
+        // Dashboard
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
-
-        $commandes = DB::table('commandes')
-        ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
-        ->groupBy('mois')
-        ->orderBy('mois')
-        ->get();
-
-    // Transformer les données pour Chart.js
-    $labels = [];
-    $data = [];
-
-    foreach ($commandes as $commande) {
-        $labels[] = date("F", mktime(0, 0, 0, $commande->mois, 1)); // Nom du mois
-        $data[] = $commande->total;
-    }
-
-            return view('admin.dashboard', compact('casses', 'clients', 'data',));
-        })->name('dashboard');
-
-        // Gestion utilisateurs
-        Route::get('/users', function () {
-            $casses = User::with(['vehicles', 'pieces'])->where('role', 'casse')->get();
-            $clients = User::with(['commandes'])->where('role', 'client')->get();
-
-            return view('admin.users.index', compact('casses', 'clients'));
-        })->name('users.index');
+        // Gestion des utilisateurs
+        Route::get('/users', [AdminController::class, 'users'])->name('users.index');
+        Route::delete('/users/{id}', [AdminController::class, 'destroy'])->name('users.destroy');
 
         // Statistiques
-        Route::get('/statistics', function () {
-            return view('admin.statistics.index');
-        })->name('statistics');
+        Route::get('/statistics', [AdminController::class, 'statistics'])->name('statistics');
 
         // Paramètres
-        Route::get('/settings', function () {
-            return view('admin.settings.index');
-        })->name('settings');
+        Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
     });
 });
- Route::get('/commandes', function () {
-            $commandes = Commande::whereHas('items.piece.vehicle', function ($query) {
-                $query->where('casse_id', auth()->id());
-            })->with(['client', 'items.piece'])->latest()->paginate(10);
 
-            return view('casse.commandes.index', compact('commandes'));
-        })->name('commandes');
+// ----------------------
+// Route publique Commandes Casse (éviter conflit noms)
+// ----------------------
+Route::get('/commandes-casse', function () {
+    $commandes = Commande::whereHas('items.piece.vehicle', function ($query) {
+        $query->where('casse_id', auth()->id());
+    })->with(['client', 'items.piece'])->latest()->paginate(10);
+
+    return view('casse.commandes.index', compact('commandes'));
+})->name('gestion.commandes.index');
+
+
+
+

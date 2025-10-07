@@ -63,16 +63,11 @@ class User extends Authenticatable
     }
 
     // Pièces via les véhicules
-    public function pieces(): HasManyThrough
+
+
+    public function pieces()
     {
-        return $this->hasManyThrough(
-            Piece::class,
-            Vehicle::class,
-            'casse_id', // clé étrangère sur Vehicle qui pointe vers User
-            'vehicle_id', // clé étrangère sur Piece qui pointe vers Vehicle
-            'id',         // clé locale User
-            'id'          // clé locale Vehicle
-        );
+        return $this->hasMany(Piece::class);
     }
 
     // Commandes passées par l'utilisateur
@@ -98,6 +93,16 @@ class User extends Authenticatable
             'id'         // clé locale Panier
         );
     }
+
+
+
+
+
+
+
+
+
+
 
     // Notifications
     public function notifications(): HasMany

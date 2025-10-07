@@ -1,22 +1,25 @@
 <?php
 
-
-// app/Policies/PiecePolicy.php
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\Piece;
+use App\Models\User;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class PiecePolicy
 {
+    use HandlesAuthorization;
+
     public function viewAny(User $user): bool
     {
-        return true;
+        // Toutes les casses peuvent voir leurs pièces
+        return $user->isCasse();
     }
 
     public function view(User $user, Piece $piece): bool
     {
-        return true;
+        // Une casse ne peut voir que ses pièces
+        return $user->isCasse() && $user->id === $piece->user_id;
     }
 
     public function create(User $user): bool
@@ -26,11 +29,11 @@ class PiecePolicy
 
     public function update(User $user, Piece $piece): bool
     {
-        return $user->isCasse() && $user->id === $piece->vehicle->casse_id;
+        return $user->isCasse() && $user->id === $piece->user_id;
     }
 
     public function delete(User $user, Piece $piece): bool
     {
-        return $user->isCasse() && $user->id === $piece->vehicle->casse_id;
+        return $user->isCasse() && $user->id === $piece->user_id;
     }
 }

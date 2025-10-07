@@ -84,10 +84,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th>Véhicule:</th>
-                                        <td>{{ $piece->vehicle->marque }} {{ $piece->vehicle->modele }} ({{ $piece->vehicle->annee }})</td>
-                                    </tr>
-                                    <tr>
                                         <th>Compatible avec:</th>
                                         <td>
                                             @if(!empty($piece->compatible_avec))
@@ -95,7 +91,6 @@
                                             @else
                                                 Non spécifié
                                             @endif
-
                                         </td>
                                     </tr>
                                 </table>
@@ -125,7 +120,9 @@
                                             <div class="card-body">
                                                 <h6>{{ $similaire->nom }}</h6>
                                                 <p class="text-muted small">
-                                                    {{ $similaire->vehicle->marque }} {{ $similaire->vehicle->modele }}
+                                                    @if($similaire->user)
+                                                        Casse: {{ $similaire->user->nom_entreprise ?? $similaire->user->name }}
+                                                    @endif
                                                 </p>
                                                 <div class="d-flex justify-content-between align-items-center">
                                                 <span class="h6 text-primary mb-0">
@@ -149,30 +146,30 @@
                     <div class="card-header">
                         <h6 class="m-0">Informations de la casse</h6>
                     </div>
-                    <div class="card-body">
-                        <div class="text-center">
-                            @if($piece->vehicle->casse->logo)
-                                <img src="{{ asset('storage/' . $piece->vehicle->casse->logo) }}"
-                                     class="rounded-circle mb-3" width="80" height="80" style="object-fit: cover;">
-                            @else
-                                <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
-                                     style="width: 80px; height: 80px;">
-                                    <i class="fas fa-warehouse fa-2x text-white"></i>
-                                </div>
-                            @endif
-                            <h6>{{ $piece->vehicle->casse->nom_entreprise }}</h6>
+                    <div class="card-body text-center">
+                        @if($piece->user && $piece->user->logo)
+                            <img src="{{ asset('storage/' . $piece->user->logo) }}"
+                                 class="rounded-circle mb-3" width="80" height="80" style="object-fit: cover;">
+                        @else
+                            <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center mb-3"
+                                 style="width: 80px; height: 80px;">
+                                <i class="fas fa-warehouse fa-2x text-white"></i>
+                            </div>
+                        @endif
+                        <h6>{{ $piece->user->nom_entreprise ?? $piece->user->name }}</h6>
+                        @if($piece->user)
                             <p class="text-muted small">
                                 <i class="fas fa-map-marker-alt"></i>
-                                {{ $piece->vehicle->casse->adresse }}, {{ $piece->vehicle->casse->ville }}<br>
-                                <i class="fas fa-phone"></i> {{ $piece->vehicle->casse->telephone }}
+                                {{ $piece->user->adresse ?? '' }}, {{ $piece->user->ville ?? '' }}<br>
+                                <i class="fas fa-phone"></i> {{ $piece->user->telephone ?? '' }}
                             </p>
-                            <a href="#" class="btn btn-outline-primary btn-sm">Voir la casse</a>
-                        </div>
+                        @endif
+                        <a href="#" class="btn btn-outline-primary btn-sm">Voir la casse</a>
                     </div>
                 </div>
 
                 <!-- Actions -->
-                @if(auth()->user()->isCasse() && auth()->user()->id === $piece->vehicle->casse_id)
+                @if(auth()->user()->isCasse() && auth()->user()->id === $piece->user_id)
                     <div class="card shadow mb-4">
                         <div class="card-header">
                             <h6 class="m-0">Actions</h6>
@@ -221,34 +218,6 @@
                     </div>
                 @endif
 
-                <!-- Autres pièces du véhicule -->
-                @if($autresPiecesVehicule->count() > 0)
-                    <div class="card shadow mt-4">
-                        <div class="card-header">
-                            <h6 class="m-0">Autres pièces de ce véhicule</h6>
-                        </div>
-                        <div class="card-body">
-                            @foreach($autresPiecesVehicule as $autrePiece)
-                                <div class="d-flex mb-3">
-                                    @if($autrePiece->photos && count($autrePiece->photos) > 0)
-                                        <img src="{{ asset('storage/' . $autrePiece->photos[0]) }}"
-                                             class="rounded me-3" width="60" height="60" style="object-fit: cover;">
-                                    @else
-                                        <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center"
-                                             style="width: 60px; height: 60px;">
-                                            <i class="fas fa-cog text-muted"></i>
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <h6 class="mb-0">{{ $autrePiece->nom }}</h6>
-                                        <small class="text-muted">{{ number_format($autrePiece->prix, 2, ',', ' ') }} FCFA</small><br>
-                                        <a href="{{ route('pieces.show', $autrePiece) }}" class="btn btn-sm btn-outline-primary mt-1">Voir</a>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
             </div>
         </div>
     </div>

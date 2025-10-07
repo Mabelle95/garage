@@ -28,6 +28,12 @@ class PanierController extends Controller
         ]);
 
         if (!$piece->disponible) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cette pièce n\'est plus disponible.'
+                ]);
+            }
             return back()->with('error', 'Cette pièce n\'est plus disponible.');
         }
 
@@ -41,6 +47,12 @@ class PanierController extends Controller
         if ($existingItem) {
             $newQuantite = $existingItem->quantite + $request->quantite;
             if ($newQuantite > $piece->quantite) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Quantité demandée supérieure au stock disponible.'
+                    ]);
+                }
                 return back()->with('error', 'Quantité demandée supérieure au stock disponible.');
             }
             $existingItem->update(['quantite' => $newQuantite]);
@@ -48,6 +60,13 @@ class PanierController extends Controller
             $panier->items()->create([
                 'piece_id' => $piece->id,
                 'quantite' => $request->quantite
+            ]);
+        }
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pièce ajoutée au panier avec succès.'
             ]);
         }
 

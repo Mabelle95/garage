@@ -95,7 +95,7 @@
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ Request::is('commandes*') ? 'active' : '' }}" href="{{ route('commandes') }}">
+                            <a class="nav-link {{ Request::is('commandes*') ? 'active' : '' }}" href="{{ route('commandes.index') }}">
                                 <i class="fas fa-list-alt me-2"></i> Mes commandes
                             </a>
                         </li>
@@ -109,7 +109,7 @@
                                 <i class="fas fa-users me-2"></i> Utilisateurs (Casses & Clients)
                             </a>
                         </li>
-                        
+
                     @endif
 
                     <!-- Menu commun -->
@@ -161,6 +161,8 @@
         </div>
     </main>
 </div>
+
+
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 @yield('scripts')

@@ -145,7 +145,9 @@ return new class extends Migration
         // Table des offres sur épaves
         Schema::create('offres_epaves', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('demande_epave_id')->constrained()->onDelete('cascade');
+            $table->foreignId('demande_epave_id')
+      ->constrained('demandes_epaves')
+      ->onDelete('cascade');
             $table->foreignId('casse_id')->constrained('users')->onDelete('cascade');
             $table->decimal('prix_offert', 10, 2);
             $table->text('message')->nullable();

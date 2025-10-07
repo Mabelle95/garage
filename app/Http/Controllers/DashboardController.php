@@ -30,32 +30,49 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
+        // 🔹 Stats pour la casse
         $stats = [
-            'vehicules' => $user->vehicles()->count(),
-            'pieces' => Piece::whereHas('vehicle', function($query) use($user) {
-                $query->where('casse_id', $user->id);
-            })->count(),
-            'commandes_mois' => Commande::whereHas('items.piece.vehicle', function($query) use($user) {
-                $query->where('casse_id', $user->id);
+            'vehicules' => $user->vehicles()->count(), // Si vehicles existent
+            'pieces' => Piece::where('user_id', $user->id)->count(),
+            'commandes_mois' => Commande::whereHas('items.piece', function($query) use($user) {
+                $query->where('user_id', $user->id);
             })->whereMonth('created_at', now()->month)->count(),
-            'chiffre_affaires_mois' => Commande::whereHas('items.piece.vehicle', function($query) use($user) {
-                $query->where('casse_id', $user->id);
-            })->whereMonth('created_at', now()->month)->sum('total')
+            'chiffre_affaires_mois' => Commande::whereHas('items.piece', function($query) use($user) {
+                $query->where('user_id', $user->id);
+            })->whereMonth('created_at', now()->month)->sum('total'),
         ];
 
+        // 🔹 Pièces récentes pour la casse
+        $recentPieces = Piece::where('user_id', $user->id)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // 🔹 Véhicules récents pour info (si tu gardes vehicles)
         $recentVehicles = $user->vehicles()->latest()->take(5)->get();
 
-        // Correction: utiliser 'client' au lieu de 'user'
-        $recentCommandes = Commande::whereHas('items.piece.vehicle', function($query) use($user) {
-            $query->where('casse_id', $user->id);
+        // 🔹 Commandes récentes
+        $recentCommandes = Commande::whereHas('items.piece', function($query) use($user) {
+            $query->where('user_id', $user->id);
         })
-        ->with(['client', 'items.piece.vehicle.casse'])
-        ->latest()->take(5)->get();
+            ->with(['client', 'items.piece'])
+            ->latest()
+            ->take(5)
+            ->get();
 
+        // 🔹 Demandes épaves récentes
         $demandesEpaves = DemandeEpave::where('statut', 'en_attente')
-            ->latest()->take(5)->get();
+            ->latest()
+            ->take(5)
+            ->get();
 
-        return view('dashboard.casse', compact('stats', 'recentVehicles', 'recentCommandes', 'demandesEpaves'));
+        return view('dashboard.casse', compact(
+            'stats',
+            'recentPieces',
+            'recentVehicles',
+            'recentCommandes',
+            'demandesEpaves'
+        ));
     }
 
     private function clientDashboard()
@@ -71,15 +88,26 @@ class DashboardController extends Controller
             'favoris' => $user->favoris()->count()
         ];
 
-        $recentCommandes = $user->commandes()->with(['items.piece.vehicle.casse'])->latest()->take(5)->get();
+        $recentCommandes = $user->commandes()
+            ->with(['items.piece'])
+            ->latest()
+            ->take(5)
+            ->get();
+
         $notifications = $user->notifications()->where('lu', false)->latest()->take(5)->get();
 
         $piecesPopulaires = Piece::where('disponible', true)
             ->withCount('commandeItems')
             ->orderBy('commande_items_count', 'desc')
-            ->take(6)->get();
+            ->take(6)
+            ->get();
 
-        return view('dashboard.client', compact('stats', 'recentCommandes', 'notifications', 'piecesPopulaires'));
+        return view('dashboard.client', compact(
+            'stats',
+            'recentCommandes',
+            'notifications',
+            'piecesPopulaires'
+        ));
     }
 
     private function adminDashboard()
@@ -102,35 +130,42 @@ class DashboardController extends Controller
             ->get();
 
         $recentUsers = User::latest()->take(5)->get();
-        $recentCommandes = Commande::with(['client', 'items.piece.vehicle.casse'])->latest()->take(5)->get();
+        $recentCommandes = Commande::with(['client', 'items.piece'])->latest()->take(5)->get();
 
         $commandes = DB::table('commandes')
-        ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
-        ->groupBy('mois')
-        ->orderBy('mois')
-        ->get();
+            ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
+            ->groupBy('mois')
+            ->orderBy('mois')
+            ->get();
 
-    // Transformer les données pour Chart.js
-    $labels_chart = [];
-    $data = [];
+        // Transformer les données pour Chart.js
+        $labels_chart = [];
+        $data = [];
+        foreach ($commandes as $commande) {
+            $labels_chart[] = date("F", mktime(0, 0, 0, $commande->mois, 1));
+            $data[] = $commande->total;
+        }
 
-    foreach ($commandes as $commande) {
-        $labels_chart[] = date("F", mktime(0, 0, 0, $commande->mois, 1)); // Nom du mois
-        $data[] = $commande->total;
-    }
+        $clientsInscrits = DB::table('users')
+            ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
+            ->where('role', 'client')
+            ->groupBy('mois')
+            ->orderBy('mois')
+            ->get();
 
-       $clientsInscrits = DB::table('users')
-        ->selectRaw('MONTH(created_at) as mois, COUNT(*) as total')
-        ->where('role', 'client')
-        ->groupBy('mois')
-        ->orderBy('mois')
-        ->get();
+        $dataClients = [];
+        foreach ($clientsInscrits as $cli) {
+            $dataClients[] = $cli->total;
+        }
 
-    $dataClients = [];
-    foreach ($clientsInscrits as $cli) {
-        $dataClients[] = $cli->total;
-    }
-
-        return view('dashboard.admin', compact('stats', 'commandesParMois', 'recentUsers', 'recentCommandes', 'data', 'labels_chart', 'dataClients'));
+        return view('dashboard.admin', compact(
+            'stats',
+            'commandesParMois',
+            'recentUsers',
+            'recentCommandes',
+            'data',
+            'labels_chart',
+            'dataClients'
+        ));
     }
 }
