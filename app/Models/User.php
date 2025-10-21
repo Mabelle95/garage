@@ -25,6 +25,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'adresse',
+        'code_postal',
         'role',
         'ville',
         'latitude',
@@ -88,6 +90,11 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === UserRole::ADMIN;
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->telephone && $this->adresse && $this->email && $this->ville;
     }
 
     // -----------------------------

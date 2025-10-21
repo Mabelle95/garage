@@ -16,13 +16,24 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
+        // dd($user->isCompleted());
 
-        if ($user->isCasse()) {
-            return $this->casseDashboard();
-        } elseif ($user->isClient()) {
-            return $this->clientDashboard();
-        } elseif ($user->isAdmin()) {
+        // dd($user->telephone !== "", $user->adresse, $user->email);
+        // if ($user->isCasse() && $user->isCompleted()) {
+
+        if ($user->isAdmin()) {
             return $this->adminDashboard();
+        }
+
+        if ($user->isCompleted()) {
+            if ($user->isCasse()) {
+                return $this->casseDashboard();
+            } elseif ($user->isClient() ) {
+                return $this->clientDashboard();
+            }
+        } else {
+            $user = Auth::user();
+            return view('profile.edit', compact('user'));
         }
     }
 
@@ -30,13 +41,24 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 🔹 Stats pour la casse
+        $vehiclesCount = DemandeEpave::query()
+            ->where('user_id', $user->id)
+            ->count();
+
+        $pieceCount = Piece::where('user_id', $user->id)->count();
+
+        // Stats pour la casse
         $stats = [
-            'vehicules' => $user->vehicles()->count(), // Si vehicles existent
-            'pieces' => Piece::where('user_id', $user->id)->count(),
-            'commandes_mois' => Commande::whereHas('items.piece', function($query) use($user) {
-                $query->where('user_id', $user->id);
-            })->whereMonth('created_at', now()->month)->count(),
+            'vehicules' => $vehiclesCount ?? 0, // Si vehicles existent
+            'pieces' => $pieceCount ?? 0,
+
+            'commandes_mois' => Commande::whereHas(
+                'items.piece',
+                function($query) use($user) {
+                    $query->where('user_id', $user->id);
+                }
+            )->whereMonth('created_at', now()->month)->count(),
+
             'chiffre_affaires_mois' => Commande::whereHas('items.piece', function($query) use($user) {
                 $query->where('user_id', $user->id);
             })->whereMonth('created_at', now()->month)->sum('total'),

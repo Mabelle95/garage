@@ -2,8 +2,21 @@
 
 @section('title', 'Mon profil')
 
+@php
+    $user = Auth::user()
+@endphp
+
 @section('content')
     <div class="container-fluid">
+
+@if (!$user->isCompleted())
+<div class="d-flex alert alert-danger" role="alert">
+    {{-- icon --}}
+    <p class="m-0">
+        Veuillez completer votre profile
+    </p>
+</div>
+@endif
         <div class="row">
             <div class="col-lg-4">
                 <!-- Carte profil -->

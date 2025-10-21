@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Commande;
 use App\Models\CommandeItem;
+use App\Models\Panier;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -71,7 +72,8 @@ class CommandeController extends Controller
         $request->validate([
             'adresse_livraison' => 'required|string',
             'telephone_livraison' => 'required|string',
-            'mode_paiement' => 'required|in:carte_bancaire,paypal,virement,especes',
+            // 'mode_paiement' => 'required|in:carte_bancaire,paypal,virement,especes',
+            'mode_paiement' => 'required',
             'notes' => 'nullable|string',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
@@ -128,12 +130,16 @@ class CommandeController extends Controller
             // Vider le panier
             $panier->items()->delete();
 
+            // dd($item->piece->user);
+
             // Notification à l'utilisateur client
             $this->notificationService->commandeCreee(Auth::user(), $commande);
         });
 
+        $info = $item->piece->user->telephone ?  $item->piece->user->telephone : "90992020 ou 99440449";
+
         return redirect()->route('commandes.show', $commande)
-            ->with('success', 'Commande créée avec succès.');
+            ->with('success', 'Commande créée avec succès. veuillez completer l\'operation par un depot sur le ' . $info);
     }
 
     // Afficher une commande

@@ -117,7 +117,7 @@
 
                         @if(auth()->user()->isClient() && $commande->statut === 'en_attente')
                             <hr>
-                            <button type="button" class="btn btn-outline-primary" onclick="openGeoPicker()">
+                            {{-- <button type="button" class="btn btn-outline-primary" onclick="openGeoPicker()">
                                 <i class="fas fa-map-marker-alt"></i> Ajouter ma position actuelle
                             </button>
 
@@ -127,7 +127,7 @@
                                 <input type="hidden" name="latitude" id="latitude">
                                 <input type="hidden" name="longitude" id="longitude">
                                 <button type="submit" class="btn btn-primary">Confirmer la localisation</button>
-                            </form>
+                            </form> --}}
                         @endif
                     </div>
                 </div>

@@ -30,6 +30,7 @@
                                     </thead>
                                     <tbody>
                                     @foreach($panier->items as $item)
+                                        {{-- @dd($item->piece->user) --}}
                                         <tr>
                                             <td>
                                                 <strong>{{ $item->piece->nom ?? 'N/A' }}</strong><br>
@@ -92,10 +93,14 @@
                             <div class="mb-3">
                                 <label for="mode_paiement" class="form-label">Mode de paiement *</label>
                                 <select class="form-select" id="mode_paiement" name="mode_paiement" required>
-                                    <option value="carte_bancaire">Carte bancaire</option>
-                                    <option value="paypal">PayPal</option>
-                                    <option value="virement">Virement bancaire</option>
+                                    {{-- <option value="carte_bancaire">Carte bancaire</option>
+                                    <option value="paypal">PayPal</option> --}}
+                                    {{-- <option value="virement">Virement bancaire</option> --}}
+
+                                    <option value="{{ $item->piece->user->telephone ?? '99440449'}}">Flooz</option>
+                                    <option value="{{ $item->piece->user->telephone ?? '90992020'}}">Mixx by yas</option>
                                     <option value="especes">Espèces (à la livraison)</option>
+
                                 </select>
                             </div>
 
@@ -125,7 +130,7 @@
                     document.getElementById('longitude').value = lon;
 
                     const adresse = document.getElementById('adresse_livraison');
-                    adresse.value = `Lat: ${lat}, Lon: ${lon}`;
+                    adresse.value += `; Lat: ${lat}, Lon: ${lon}`;
 
                     alert(`Votre position a été ajoutée.\nLatitude: ${lat}\nLongitude: ${lon}`);
                 }, err => {

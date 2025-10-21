@@ -81,7 +81,8 @@ return new class extends Migration
             $table->decimal('total', 10, 2);
             $table->text('adresse_livraison');
             $table->string('telephone_livraison');
-            $table->enum('mode_paiement', ['carte_bancaire', 'paypal', 'virement', 'especes']);
+            $table->string('mode_paiement');
+            // $table->enum('mode_paiement', ['carte_bancaire', 'paypal', 'virement', 'especes']);
             $table->enum('statut_paiement', ['en_attente', 'paye', 'rembourse']);
             $table->text('notes')->nullable();
             $table->timestamps();

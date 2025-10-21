@@ -3,6 +3,20 @@
 @section('title', 'Modifier le profil')
 
 @section('content')
+
+@php
+    $user = Auth::user()
+@endphp
+
+@if (!$user->isCompleted())
+<div class="d-flex alert alert-danger" role="alert">
+    {{-- icon --}}
+    <p class="m-0">
+        Veuillez completer votre profile
+    </p>
+</div>
+@endif
+
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Modifier le profil</h1>
@@ -17,7 +31,7 @@
                 <div class="card-body">
                     <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        @method('PUT')
+                        @method('PATCH')
 
                         <h5 class="mb-3">Informations personnelles</h5>
                         <div class="row">
@@ -132,7 +146,7 @@
                 <div class="card-body">
                     <form action="{{ route('profile.password.update') }}" method="POST">
                         @csrf
-                        @method('PUT') {{-- <== Ajouter cette ligne --}}
+                        @method('PATCH')
 
                         <div class="mb-3">
                             <label for="current_password" class="form-label">Mot de passe actuel</label>

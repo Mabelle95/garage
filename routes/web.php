@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\{
     DashboardController,
     PieceController,
@@ -12,7 +12,8 @@ use App\Http\Controllers\{
     NotificationController,
     ProfileController,
     VehicleController,
-    VenteEpaveController
+    VenteEpaveController,
+    PaymentController
 };
 use App\Http\Controllers\auth\AdminController;
 use App\Models\Commande;
@@ -91,6 +92,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
             Route::delete('/items/{item}', [PanierController::class, 'remove'])->name('remove');
             Route::delete('/clear', [PanierController::class, 'clear'])->name('clear');
         });
+    });
 
         // Commandes client
         Route::prefix('commandes')->name('commandes.')->group(function () {
@@ -101,7 +103,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
             Route::delete('/{commande}/annuler', [CommandeController::class, 'annuler'])->name('annuler');
             Route::put('/{commande}/update-adresse', [CommandeController::class, 'updateAdresse'])->name('update-adresse');
         });
-    });
+    // });
 
     // ----------------------
     // Routes Casse
@@ -208,14 +210,51 @@ Route::middleware('auth')->group(function() {
 // ----------------------
 // Route publique Commandes Casse (éviter conflit noms)
 // ----------------------
-Route::get('/commandes-casse', function () {
-    $commandes = Commande::whereHas('items.piece.vehicle', function ($query) {
-        $query->where('casse_id', auth()->id());
-    })->with(['client', 'items.piece'])->latest()->paginate(10);
+// Route::get('/commandes-casse', function () {
+//     $commandes = Commande::whereHas('items.piece.vehicle', function ($query) {
+//         $query->where('casse_id', auth()->id());
+//     })->with(['client', 'items.piece'])->latest()->paginate(10);
 
-    return view('casse.commandes.index', compact('commandes'));
-})->name('gestion.commandes.index');
+//     return view('casse.commandes.index', compact('commandes'));
+// })->name('gestion.commandes.index');
 
 Route::get('/auth/pending-approval', function() {
     return view('auth.pending-approval');
 })->name('auth.pending-approval');
+
+// Route::get('/pay', function () {
+//     return view('pay.index');
+// });
+// Route::get('/payment/callback', [PaymentController::class, 'callback'])->name('payment.callback');
+// Routes de paiement
+Route::prefix('payment')->name('payment.')->group(function () {
+    Route::get('/', [PaymentController::class, 'show'])->name('show');
+    Route::post('/initiate', [PaymentController::class, 'initiate'])->name('initiate');
+    Route::get('/callback', [PaymentController::class, 'callback'])->name('callback');
+    Route::get('/success/{transactionId}', [PaymentController::class, 'success'])->name('success');
+    Route::get('/cancel', [PaymentController::class, 'cancel'])->name('cancel');
+});
+
+// Webhook (exclu du CSRF)
+Route::post('/fedapay/webhook', [PaymentController::class, 'webhook'])->name('fedapay.webhook');
+
+// Route de test
+Route::get('/test-fedapay', function() {
+    try {
+        \FedaPay\FedaPay::setApiKey(config('fedapay.secret_key'));
+        \FedaPay\FedaPay::setEnvironment(config('fedapay.environment'));
+
+        return response()->json([
+            'status' => 'OK',
+            'environment' => config('fedapay.environment'),
+            'has_public_key' => !empty(config('fedapay.public_key')),
+            'has_secret_key' => !empty(config('fedapay.secret_key')),
+            'callback_url' => config('fedapay.callback_url'),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'ERROR',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+});

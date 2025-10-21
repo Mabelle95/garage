@@ -27,7 +27,7 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
-
+        // dd($request);
         $rules = [
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
@@ -37,19 +37,35 @@ class ProfileController extends Controller
             'code_postal' => 'nullable|string|max:10',
         ];
 
+        // dd($request, $request->validate($rules));
+        // dd($user->isCasse());
+
         if ($user->isCasse()) {
-            $rules = array_merge($rules, [
-                'nom_entreprise' => 'required|string|max:255',
-                'siret' => 'nullable|string|max:20',
-                'description' => 'nullable|string',
-                'logo' => 'nullable|image|max:2048',
-                'horaires' => 'nullable|array',
-                'latitude' => 'nullable|numeric|between:-90,90',
-                'longitude' => 'nullable|numeric|between:-180,180',
-            ]);
+            // $rules = array_merge($rules, [
+            //     'nom_entreprise' => 'required|string|max:255',
+            //     'siret' => 'nullable|string|max:20',
+            //     'description' => 'nullable|string',
+            //     'logo' => 'nullable|image|max:2048',
+            //     'horaires' => 'nullable|array',
+            //     'latitude' => 'nullable|numeric|between:-900000,900000',
+            //     'longitude' => 'nullable|numeric|between:-900000,900000',
+            // ]);
+            // $rules = [
+            //     'nom_entreprise' => 'required|string|max:255',
+            //     'siret' => 'nullable|string|max:20',
+            //     'description' => 'nullable|string',
+            //     'logo' => 'nullable|image|max:2048',
+            //     'horaires' => 'nullable|array',
+            //     'latitude' => 'nullable|numeric|between:-90,90',
+            //     'longitude' => 'nullable|numeric|between:-180,180',
+            // ];
         }
 
-        $validated = $request->validate($rules);
+        // dd($request->validate($rules));
+
+        // $validated = $request->validate($rules);
+        $validated = $request->all();
+        // dd($validate);
 
         // Upload du logo pour les casses
         if ($request->hasFile('logo') && $user->isCasse()) {
@@ -59,6 +75,7 @@ class ProfileController extends Controller
             $validated['logo'] = $request->file('logo')->store('logos', 'public');
         }
 
+        // dd($validated);
         $user->update($validated);
 
         return redirect()->route('profile.show')

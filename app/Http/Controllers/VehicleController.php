@@ -99,7 +99,6 @@ class VehicleController extends Controller
 
     public function store(Request $request)
     {
-
         $this->authorize('create', Vehicle::class);
 
         $validated = $request->validate([

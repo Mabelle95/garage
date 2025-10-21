@@ -189,6 +189,10 @@ class DemandeEpaveController extends Controller
     {
         $user = Auth::user();
 
+        if (!$user->isCasse() && !$user->isCompleted()) {
+            return view('profile.edit', compact('user'));
+        }
+
         // Récupérer MES demandes
         $mesDemandes = $user->demandesEpaves()
             ->with(['offres.user'])
@@ -224,8 +228,35 @@ class DemandeEpaveController extends Controller
     public function create()
     {
         $marques = Marque::active()->orderBy('nom')->get();
-        return view('demandes-epaves.create', compact('marques'));
+
+        $casse = auth()->user();
+        // dd($casse->isCasse() && $casse->isCompleted());
+
+        if ($casse->isCasse() || $casse->isClient()) {
+            if (!$casse->isCompleted()) {
+                $user = Auth::user();
+                return view('profile.edit', compact('user'));
+            }
+
+            return view('demandes-epaves.create', compact('marques', 'casse'));
+        } else {
+            abort();
+        }
+
+        // dd($casse);
+
+        // $casseInfo = [
+        //     'nom' => $casse->name,
+        //     'email' => $casse->email,
+        //     'telephone' => $casse->telephone,
+        //     'adresse' => $casse->adresse,
+        // ];
+
+        // return view('demandes-epaves.create', compact('marques', 'casse'));
     }
+
+    //     return view('demandes-epaves.create', compact('marques'));
+    // }
 
     public function store(Request $request)
     {
@@ -235,7 +266,7 @@ class DemandeEpaveController extends Controller
             'marque_autre' => 'nullable|string|max:255',
             'modele' => 'required|string|max:255',
             'modele_autre' => 'nullable|string|max:255',
-            'annee' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'annee' => 'required|integer|min:1900|max:' . (date('Y') ),
             'numero_chassis' => 'required|string',
             'numero_plaque' => 'required|string',
             'couleur' => 'required|string',
@@ -319,7 +350,7 @@ class DemandeEpaveController extends Controller
             'marque_autre' => 'nullable|string|max:255',
             'modele' => 'required|string|max:255',
             'modele_autre' => 'nullable|string|max:255',
-            'annee' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'annee' => 'required|integer|min:1900|max:' . (date('Y') ),
             'couleur' => 'required|string',
             'carburant' => 'required|in:essence,diesel,hybride,electrique',
             'kilometrage' => 'required|integer|min:0',

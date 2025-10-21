@@ -18,9 +18,16 @@ class PieceController extends Controller
     {
         $user = Auth::user();
 
+
+        if (!$user->isCasse() && !$user->isCompleted()) {
+            return view('profile.edit', compact('user'));
+        }
+
         if ($user->isCasse()) {
             // Vue casse : toutes les pièces de l'utilisateur connecté
-            $query = Piece::with(['marque', 'modele', 'nomPiece'])->where('user_id', $user->id);
+            $query = Piece::with(['marque', 'modele', 'nomPiece'])
+                ->where('user_id', $user->id)
+                ->where('quantite', '>', 0);
 
             if ($request->filled('search')) {
                 $query->where('nom', 'like', '%' . $request->search . '%');

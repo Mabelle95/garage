@@ -47,7 +47,9 @@ class AppServiceProvider extends ServiceProvider
         });
 
 
-
+if ($this->app->environment('production')) {
+        URL::forceScheme('https');
+    }
 
         View::composer('layouts.casse', function ($view) {
             $casseId = auth()->check() ? auth()->user()->casse_id : null;

@@ -176,20 +176,27 @@
 
                     <hr>
 
-                    <h5 class="mb-3">Informations de contact</h5>
+                    <h5 class="mb-3" hidden>Informations de contact</h5>
 
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="telephone_contact" class="form-label">Téléphone de contact *</label>
                                 <input type="text" class="form-control" id="telephone_contact" name="telephone_contact"
-                                       required value="{{ old('telephone_contact') }}">
+                                       required value="{{ old('telephone_contact', $casse->telephone) }}">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="adresse" class="form-label">Adresse où se trouve le véhicule *</label>
-                                <input type="text" class="form-control" id="adresse" name="adresse" required value="{{ old('adresse') }}">
+                                <input type="text" class="form-control" id="adresse" name="adresse" required value="{{ old('adresse', $casse->adresse) }}">
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="adresse" class="form-label">Email *</label>
+                                <input type="text" class="form-control" id="adresse" name="adresse" required value="{{ old('adresse', $casse->email) }}">
                             </div>
                         </div>
                     </div>
