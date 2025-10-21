@@ -65,8 +65,15 @@
                 <div class="card shadow">
                     <div class="card-header"><h5 class="m-0">Informations de livraison</h5></div>
                     <div class="card-body">
-                        <form action="{{ route('commandes.store') }}" method="POST" id="commandeForm">
+                        <form action="{{ route('commandes.confirme') }}" method="POST" id="commandeForm">
                             @csrf
+
+                            {{-- Information recuperer depuis panier --}}
+                            <input type="hidden" name="casse" value="{{ $casse }}">
+                            
+                            <input type="hidden" name="panier_id" value="{{ $panier->id }}">
+                            <input type="hidden" name="panier_items" value="{{ $panier->items }}">
+                            <input type="hidden" name="panier_total" id="panier_total" value="{{ $panier->getTotal() }}">
 
                             <div class="mb-3">
                                 <label for="adresse_livraison" class="form-label">Adresse de livraison *</label>
@@ -97,8 +104,12 @@
                                     <option value="paypal">PayPal</option> --}}
                                     {{-- <option value="virement">Virement bancaire</option> --}}
 
-                                    <option value="{{ $item->piece->user->telephone ?? '99440449'}}">Flooz</option>
-                                    <option value="{{ $item->piece->user->telephone ?? '90992020'}}">Mixx by yas</option>
+                                    {{-- <option value="{{ $casse->flooz_number ?? '99440449'}}">Flooz</option>
+                                    <option value="{{ $casse->mixx_number ?? '90992020'}}">Mixx by yas</option> --}}
+                                                                        
+                                    <option value="flooz">Flooz</option>
+                                    <option value="mixx">Mixx by yas</option>
+                                    
                                     <option value="especes">Espèces (à la livraison)</option>
 
                                 </select>

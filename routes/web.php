@@ -99,6 +99,9 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
             Route::get('/', [CommandeController::class, 'index'])->name('index');
             Route::get('/create', [CommandeController::class, 'create'])->name('create');
             Route::post('/', [CommandeController::class, 'store'])->name('store');
+
+            Route::post('/confirme', [CommandeController::class, 'confirme'])->name('confirme');
+
             Route::get('/{commande}', [CommandeController::class, 'show'])->name('show');
             Route::delete('/{commande}/annuler', [CommandeController::class, 'annuler'])->name('annuler');
             Route::put('/{commande}/update-adresse', [CommandeController::class, 'updateAdresse'])->name('update-adresse');

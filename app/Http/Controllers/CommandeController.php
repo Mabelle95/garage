@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Commande;
 use App\Models\CommandeItem;
 use App\Models\Panier;
+use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,6 +51,9 @@ class CommandeController extends Controller
     public function create()
     {
         $panier = Auth::user()->panier()->with(['items.piece'])->first();
+        $casse_id = $panier->items[0]->piece->user_id;
+        $casse = User::query()->where('id', $casse_id)->first();
+        // dd($casse);
 
         if (!$panier || $panier->items->isEmpty()) {
             return redirect()->route('panier.index')
@@ -63,7 +67,35 @@ class CommandeController extends Controller
             }
         }
 
-        return view('commandes.create', compact('panier'));
+        return view('commandes.create', compact('panier', 'casse'));
+    }
+    public function confirme(Request $request) {
+        // dd($request->all());
+        $montant = $request->panier_total * env('TAUX_PAIEMENT', 0.05);
+
+        $casse = json_decode($request->casse);
+        $total = $request->panier_total;
+        $network = $request->mode_paiement;
+        
+        $payWay = null;
+
+        // dd($casse->flooz_number);
+        if ($network === 'flooz') {
+            $payWay = $casse->flooz_number;
+        } else {
+            $payWay = $casse->mixx_number;
+        }
+
+        $shortCode = null;
+
+        if ($network === 'flooz') {
+            $shortCode = "*155*1*1*$payWay*$montant#";
+        } else {
+            $shortCode = "*145*1*$montant*$payWay#";
+        }
+
+        // dd("*145*1*$montant*$request->mode_paiement#", $request);
+        return view('commande.comfirme', compact('shortCode', 'montant', 'payWay', 'total'));
     }
 
     // Stocker une commande
