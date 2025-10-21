@@ -4,6 +4,8 @@ php artisan make:migration create_modeles_table
 php artisan make:migration update_pieces_table
 php artisan make:migration ensure_ville_in_pieces_table
 
+php artisan serve --host 0.0.0.0
+
 # 2. Exécuter les migrations
 php artisan migrate
 

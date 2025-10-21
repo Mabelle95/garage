@@ -32,6 +32,8 @@ class ProfileController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
             'telephone' => 'nullable|string|max:20',
+            'flooz_number' => 'nullable|string|max:20',
+            'mixx_number' => 'nullable|string|max:20',
             'adresse' => 'nullable|string',
             'ville' => 'nullable|string|max:255',
             'code_postal' => 'nullable|string|max:10',

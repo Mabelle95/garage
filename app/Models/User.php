@@ -31,6 +31,10 @@ class User extends Authenticatable
         'ville',
         'latitude',
         'telephone',
+
+        'flooz_number',
+        'mixx_number',
+
         'longitude',
         'approved', // 👈 Ajouter ici
         'approved_at',
