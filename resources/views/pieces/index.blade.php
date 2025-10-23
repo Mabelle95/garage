@@ -227,6 +227,11 @@
                                                             title="Ajouter au panier">
                                                         <i class="fas fa-cart-plus"></i>
                                                     </button>
+                                                    {{-- <button type="button" class="btn btn-sm btn-outline-success add-to-cart-btn"
+                                                            data-piece-id="{{ $piece->id }}" data-piece-name="{{ $piece->nom }}"
+                                                            data-piece-max="{{ $piece->quantite }}" title="Ajouter au panier">
+                                                        <i class="fas fa-cart-plus"></i>
+                                                    </button> --}}
                                                 @else
                                                     <button type="button"
                                                             class="btn btn-sm btn-outline-secondary"
@@ -301,65 +306,129 @@
         </div>
 
     </div>
-@endsection
 
-@push('scripts')
+    {{-- Modal pour sélectionner la quantité --}}
+    <div class="modal fade" id="addToCartModal" tabindex="-1" aria-labelledby="addToCartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addToCartModalLabel">
+                        <i class="fas fa-cart-plus"></i> Ajouter au panier
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addToCartForm" method="POST">
+                    @csrf
+                    <div class="modal-body">
+                        <p>Pièce: <strong id="modal-piece-name"></strong></p>
+                        <div class="mb-3">
+                            <label for="modal-quantite" class="form-label">Quantité</label>
+                            <input type="number"
+                                   name="quantite"
+                                   id="modal-quantite"
+                                   class="form-control"
+                                   value="1"
+                                   min="1"
+                                   required>
+                            <small class="text-muted">Maximum disponible: <span id="modal-max-quantity"></span></small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-check"></i> Ajouter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            const addToCartModal = new bootstrap.Modal(document.getElementById('addToCartModal'));
+            const addToCartForm = document.getElementById('addToCartForm');
+            const modalQuantiteInput = document.getElementById('modal-quantite');
+            const modalPieceName = document.getElementById('modal-piece-name');
+            const modalMaxQuantity = document.getElementById('modal-max-quantity');
 
-            // Gestion de l'ajout au panier
+            // Gestion de l'ajout au panier avec modal
             const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
 
             addToCartButtons.forEach(button => {
                 button.addEventListener('click', function () {
-                    const pieceId = this.getAttribute('data-piece');
-                    const originalButton = this;
+                    const pieceId = this.getAttribute('data-piece-id');
+                    const pieceName = this.getAttribute('data-piece-name');
+                    const pieceMax = this.getAttribute('data-piece-max');
 
-                    // Désactiver le bouton pendant le traitement
-                    originalButton.disabled = true;
-                    originalButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    // Configurer le modal
+                    modalPieceName.textContent = pieceName;
+                    modalMaxQuantity.textContent = pieceMax;
+                    modalQuantiteInput.value = 1;
+                    modalQuantiteInput.max = pieceMax;
 
+                    // Configurer l'URL du formulaire
                     let url = '{{ route("panier.add", ["piece" => ":piece"]) }}';
                     url = url.replace(':piece', pieceId);
+                    addToCartForm.action = url;
 
-                    fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                            'X-Requested-With': 'XMLHttpRequest'
-                        },
-                        body: JSON.stringify({ quantite: 1 })
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                showAlert('Pièce ajoutée au panier avec succès !', 'success');
-
-                                // Modifier visuellement le bouton
-                                originalButton.classList.remove('btn-outline-success');
-                                originalButton.classList.add('btn-success');
-                                originalButton.innerHTML = '<i class="fas fa-check"></i> Ajouté';
-
-                                // Mettre à jour le compteur du panier (si vous en avez un)
-                                updateCartCount();
-                            } else {
-                                showAlert(data.message || 'Erreur lors de l\'ajout au panier', 'danger');
-
-                                // Réactiver le bouton en cas d'erreur
-                                originalButton.disabled = false;
-                                originalButton.innerHTML = '<i class="fas fa-cart-plus"></i>';
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Erreur:', error);
-                            showAlert('Erreur lors de l\'ajout au panier', 'danger');
-
-                            // Réactiver le bouton en cas d'erreur
-                            originalButton.disabled = false;
-                            originalButton.innerHTML = '<i class="fas fa-cart-plus"></i>';
-                        });
+                    // Afficher le modal
+                    addToCartModal.show();
                 });
+            });
+
+            // Validation de la quantité dans le modal
+            modalQuantiteInput.addEventListener('input', function() {
+                const max = parseInt(this.max);
+                const value = parseInt(this.value);
+
+                if (value > max) {
+                    this.value = max;
+                    showAlert('Quantité maximale disponible: ' + max, 'warning');
+                }
+
+                if (value < 1) {
+                    this.value = 1;
+                }
+            });
+
+            // Soumission du formulaire
+            addToCartForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+
+                // Désactiver le bouton
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Ajout...';
+
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            showAlert('Pièce ajoutée au panier avec succès !', 'success');
+                            addToCartModal.hide();
+                            updateCartCount();
+                        } else {
+                            showAlert(data.message || 'Erreur lors de l\'ajout au panier', 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur:', error);
+                        showAlert('Erreur lors de l\'ajout au panier', 'danger');
+                    })
+                    .finally(() => {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalButtonText;
+                    });
             });
 
             // Fonction pour afficher les alertes
@@ -369,20 +438,18 @@
                 alertDiv.style.zIndex = '9999';
                 alertDiv.style.minWidth = '300px';
                 alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
                 document.body.appendChild(alertDiv);
 
-                // Auto-suppression après 3 secondes
                 setTimeout(() => {
                     alertDiv.remove();
                 }, 3000);
             }
 
-            // Fonction pour mettre à jour le compteur du panier (optionnel)
+            // Fonction pour mettre à jour le compteur du panier
             function updateCartCount() {
-                // Si vous avez un élément avec l'ID 'cart-count' dans votre navbar
                 const cartCountElement = document.getElementById('cart-count');
                 if (cartCountElement) {
                     fetch('{{ route("panier.index") }}', {
@@ -402,9 +469,7 @@
             }
         });
     </script>
-@endpush
 
-@push('styles')
     <style>
         .table-hover tbody tr:hover {
             background-color: rgba(0, 123, 255, 0.05);
@@ -433,5 +498,14 @@
         .border-left-warning {
             border-left: 0.25rem solid #f6c23e !important;
         }
+
+        .modal-content {
+            border-radius: 10px;
+        }
+
+        .modal-header {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
     </style>
-@endpush
+@endsection

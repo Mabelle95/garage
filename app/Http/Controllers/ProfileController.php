@@ -39,8 +39,6 @@ class ProfileController extends Controller
             'code_postal' => 'nullable|string|max:10',
         ];
 
-        // dd($request, $request->validate($rules));
-        // dd($user->isCasse());
 
         if ($user->isCasse()) {
             // $rules = array_merge($rules, [
@@ -77,7 +75,6 @@ class ProfileController extends Controller
             $validated['logo'] = $request->file('logo')->store('logos', 'public');
         }
 
-        // dd($validated);
         $user->update($validated);
 
         return redirect()->route('profile.show')

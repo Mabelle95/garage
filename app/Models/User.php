@@ -769,4 +769,28 @@ class User extends Authenticatable
     {
         return $this->notifications()->where('lu', false)->count();
     }
+
+    /**
+     * Messages reçus
+     */
+    public function messagesRecus()
+    {
+        return $this->hasMany(Message::class, 'destinataire_id');
+    }
+
+    /**
+     * Messages envoyés
+     */
+    public function messagesEnvoyes()
+    {
+        return $this->hasMany(Message::class, 'expediteur_id');
+    }
+
+    /**
+     * Obtenir le nombre de messages non lus
+     */
+    public function getNombreMessagesNonLus(): int
+    {
+        return $this->messagesRecus()->where('lu', false)->count();
+    }
 }

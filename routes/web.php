@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\{
+    Admin\AdminMessageController,
     DashboardController,
     PieceController,
     PanierController,
@@ -13,8 +14,8 @@ use App\Http\Controllers\{
     ProfileController,
     VehicleController,
     VenteEpaveController,
-    PaymentController
-};
+    PaymentController,
+    MessageController};
 use App\Http\Controllers\auth\AdminController;
 use App\Models\Commande;
 
@@ -64,6 +65,43 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
         Route::put('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
     });
 
+    // ----------------------
+    // ROUTES MESSAGERIE (NOUVEAU)
+    // ----------------------
+// ----------------------
+// ROUTES MESSAGERIE (STYLE CHAT)
+// ----------------------
+    Route::prefix('messages')->name('messages.')->group(function () {
+        // Interface principale du chat
+        Route::get('/', [MessageController::class, 'index'])->name('index');
+
+        // Récupérer une conversation avec un utilisateur
+        Route::get('/conversation/{userId}', [MessageController::class, 'getConversation'])->name('conversation');
+
+        // Envoyer un message rapide (AJAX)
+        Route::post('/send-quick', [MessageController::class, 'sendQuick'])->name('send-quick');
+
+        // Marquer une conversation comme lue
+        Route::post('/mark-conversation-read/{userId}', [MessageController::class, 'markConversationAsRead'])->name('mark-conversation-read');
+
+        // Formulaire nouveau message (modal)
+        Route::get('/create', [MessageController::class, 'create'])->name('create');
+        Route::post('/', [MessageController::class, 'store'])->name('store');
+
+        // Message rapide depuis commande (modal dans l'index des commandes)
+        Route::post('/envoyer-rapide', [MessageController::class, 'envoyerRapide'])->name('envoyer-rapide');
+
+        // Marquer tous les messages comme lus
+        Route::put('/marquer-tous-lus', [MessageController::class, 'marquerTousCommeLus'])->name('marquer-tous-lus');
+
+        // API - Nombre de messages non lus
+        Route::get('/api/nombre-non-lus', [MessageController::class, 'getNombreNonLus'])->name('api.nombre-non-lus');
+
+        // Vue détaillée d'un message (ancienne version - pour compatibilité)
+        Route::get('/{message}', [MessageController::class, 'show'])->name('show');
+        Route::delete('/{message}', [MessageController::class, 'destroy'])->name('destroy');
+        Route::put('/{message}/marquer-lu', [MessageController::class, 'marquerCommeLu'])->name('marquer-lu');
+    });
     // Pièces détachées
     Route::resource('pieces', PieceController::class);
 
@@ -94,18 +132,18 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
         });
     });
 
-        // Commandes client
-        Route::prefix('commandes')->name('commandes.')->group(function () {
-            Route::get('/', [CommandeController::class, 'index'])->name('index');
-            Route::get('/create', [CommandeController::class, 'create'])->name('create');
-            Route::post('/', [CommandeController::class, 'store'])->name('store');
+    // Commandes client
+    Route::prefix('commandes')->name('commandes.')->group(function () {
+        Route::get('/', [CommandeController::class, 'index'])->name('index');
+        Route::get('/create', [CommandeController::class, 'create'])->name('create');
+        Route::post('/', [CommandeController::class, 'store'])->name('store');
 
-            Route::post('/confirme', [CommandeController::class, 'confirme'])->name('confirme');
+        Route::post('/confirme', [CommandeController::class, 'confirme'])->name('confirme');
 
-            Route::get('/{commande}', [CommandeController::class, 'show'])->name('show');
-            Route::delete('/{commande}/annuler', [CommandeController::class, 'annuler'])->name('annuler');
-            Route::put('/{commande}/update-adresse', [CommandeController::class, 'updateAdresse'])->name('update-adresse');
-        });
+        Route::get('/{commande}', [CommandeController::class, 'show'])->name('show');
+        Route::delete('/{commande}/annuler', [CommandeController::class, 'annuler'])->name('annuler');
+        Route::put('/{commande}/update-adresse', [CommandeController::class, 'updateAdresse'])->name('update-adresse');
+    });
     // });
 
     // ----------------------
@@ -157,6 +195,22 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     // Routes Admin
     // ----------------------
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+
+        Route::prefix('messages')->name('messages.')->group(function () {
+            // Interface principale de consultation des messages
+            Route::get('/', [AdminMessageController::class, 'index'])->name('index');
+
+            // Récupérer une conversation entre deux utilisateurs
+            Route::get('/conversation/{user1Id}/{user2Id}', [AdminMessageController::class, 'getConversation'])->name('conversation');
+
+            // Statistiques des messages
+            Route::get('/statistics', [AdminMessageController::class, 'statistics'])->name('statistics');
+
+            // Recherche dans les messages
+            Route::get('/search', [AdminMessageController::class, 'search'])->name('search');
+        });
+
 
         // Dashboard
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');

@@ -1,48 +1,80 @@
 <?php
 
-// app/Models/Message.php
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Message extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'expediteur_id',
         'destinataire_id',
+        'commande_id',
         'sujet',
-        'message',
-        'lu'
+        'contenu',
+        'lu',
+        'lu_at',
     ];
 
     protected $casts = [
-        'lu' => 'boolean'
+        'lu' => 'boolean',
+        'lu_at' => 'datetime',
     ];
 
+    /**
+     * L'expéditeur du message
+     */
     public function expediteur(): BelongsTo
     {
         return $this->belongsTo(User::class, 'expediteur_id');
     }
 
+    /**
+     * Le destinataire du message
+     */
     public function destinataire(): BelongsTo
     {
         return $this->belongsTo(User::class, 'destinataire_id');
     }
 
-    public function markAsRead()
+    /**
+     * La commande associée au message (optionnel)
+     */
+    public function commande(): BelongsTo
     {
-        $this->update(['lu' => true]);
+        return $this->belongsTo(Commande::class, 'commande_id');
     }
 
-    public function isFromCurrentUser()
+    /**
+     * Marquer le message comme lu
+     */
+    public function marquerCommeLu(): void
     {
-        return $this->expediteur_id === auth()->id();
+        if (!$this->lu) {
+            $this->update([
+                'lu' => true,
+                'lu_at' => now(),
+            ]);
+        }
     }
 
-    public function isToCurrentUser()
+    /**
+     * Scope pour les messages non lus
+     */
+    public function scopeNonLus($query)
     {
-        return $this->destinataire_id === auth()->id();
+        return $query->where('lu', false);
+    }
+
+    /**
+     * Scope pour les messages d'un utilisateur
+     */
+    public function scopePourUtilisateur($query, $userId)
+    {
+        return $query->where('destinataire_id', $userId);
     }
 }
-

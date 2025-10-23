@@ -134,9 +134,31 @@
                                 <i class="fas fa-users me-2"></i> Utilisateurs (Casses & Clients)
                             </a>
                         </li>
+
+                        {{-- NOUVEAU: Menu Admin Messagerie --}}
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::is('admin/messages*') ? 'active' : '' }}"
+                               href="{{ route('admin.messages.index') }}">
+                                <i class="fas fa-envelope-open-text me-2"></i> Supervision Messagerie
+                            </a>
+                        </li>
                     @endif
                     <!-- Menu commun -->
                     <hr class="bg-light my-3">
+
+                    {{-- NOUVEAU MENU MESSAGERIE --}}
+                @if(!(auth()->user()->role->value === 'admin'))
+                        <li class="nav-item">
+                            <a class="nav-link {{ Request::is('messages*') ? 'active' : '' }}" href="{{ route('messages.index') }}">
+                                <i class="fas fa-envelope me-2"></i> Messagerie
+                                @if(auth()->user()->getNombreMessagesNonLus() > 0)
+                                    <span class="badge bg-danger ms-2">{{ auth()->user()->getNombreMessagesNonLus() }}</span>
+                                @endif
+                            </a>
+                        </li>
+
+
+                @endif
 
                     <li class="nav-item">
                         <a class="nav-link {{ Request::is('notifications*') ? 'active' : '' }}" href="{{ route('notifications.index') }}">

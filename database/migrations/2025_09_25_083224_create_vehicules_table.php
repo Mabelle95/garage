@@ -191,7 +191,7 @@ return new class extends Migration
         });
 
         // Table des messages entre utilisateurs
-        Schema::create('messages', function (Blueprint $table) {
+        Schema::create('ages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('expediteur_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('destinataire_id')->constrained('users')->onDelete('cascade');

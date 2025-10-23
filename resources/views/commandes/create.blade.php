@@ -30,7 +30,6 @@
                                     </thead>
                                     <tbody>
                                     @foreach($panier->items as $item)
-                                        {{-- @dd($item->piece->user) --}}
                                         <tr>
                                             <td>
                                                 <strong>{{ $item->piece->nom ?? 'N/A' }}</strong><br>
@@ -111,7 +110,6 @@
                                     <option value="mixx">Mixx by yas</option>
                                     
                                     <option value="especes">Espèces (à la livraison)</option>
-
                                 </select>
                             </div>
 
@@ -141,7 +139,7 @@
                     document.getElementById('longitude').value = lon;
 
                     const adresse = document.getElementById('adresse_livraison');
-                    adresse.value += `; Lat: ${lat}, Lon: ${lon}`;
+                    adresse.value += `Lat: ${lat}, Lon: ${lon}`;
 
                     alert(`Votre position a été ajoutée.\nLatitude: ${lat}\nLongitude: ${lon}`);
                 }, err => {

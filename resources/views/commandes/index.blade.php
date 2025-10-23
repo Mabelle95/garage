@@ -3,6 +3,7 @@
 @section('title', auth()->user()->isClient() ? 'Mes commandes' : 'Gestion des commandes')
 
 @section('content')
+
     <div class="container-fluid">
 
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -74,6 +75,14 @@
                                             <span class="text-danger fw-bold">Commande annulée</span>
                                         @else
                                             <div class="btn-group">
+                                                <!-- Bouton Messagerie -->
+                                                <button class="btn btn-sm btn-outline-success"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#messageModal{{ $commande->id }}"
+                                                        title="Envoyer un message">
+                                                    <i class="fas fa-envelope"></i>
+                                                </button>
+
                                                 @if(auth()->user()->isCasse())
                                                     <!-- Modifier le statut depuis le modal -->
                                                     <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editStatutModal{{ $commande->id }}">
@@ -97,6 +106,12 @@
                                                                 <i class="fas fa-times"></i> Annuler
                                                             </button>
                                                         </form>
+                                                        {{-- <button type="button"
+                                                                class="btn btn-sm btn-outline-danger"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#annulerModal{{ $commande->id }}">
+                                                            <i class="fas fa-times"></i> Annuler
+                                                        </button> --}}
                                                     @else
                                                         <button type="button" class="btn btn-sm btn-outline-secondary" disabled
                                                                 data-bs-toggle="tooltip"
@@ -167,6 +182,154 @@
                                             </div>
                                         </div>
                                     </div>
+                                @endif
+
+                                <!-- Modal Messagerie -->
+                                <div class="modal fade" id="messageModal{{ $commande->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-primary text-white">
+                                                <h5 class="modal-title">
+                                                    <i class="fas fa-envelope me-2"></i>
+                                                    Envoyer un message concernant la commande {{ $commande->numero_commande }}
+                                                </h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form action="{{ route('messages.envoyer-rapide') }}" method="POST">
+                                                @csrf
+                                                <input type="hidden" name="commande_id" value="{{ $commande->id }}">
+                                                @php
+                                                    // Déterminer le destinataire selon le rôle de l'utilisateur
+                                                    if (auth()->user()->isClient()) {
+                                                        // Si client, chercher la casse de la première pièce
+                                                        $destinataire = $commande->items->first()?->piece?->user;
+                                                        $destinataireId = $destinataire?->id;
+                                                    } else {
+                                                        // Si casse, envoyer au client
+                                                        $destinataire = $commande->user;
+                                                        $destinataireId = $commande->user_id;
+                                                    }
+                                                @endphp
+                                                <input type="hidden" name="destinataire_id" value="{{ $destinataireId }}">
+
+                                                <div class="modal-body">
+                                                    <div class="alert alert-info">
+                                                        <i class="fas fa-info-circle me-2"></i>
+                                                        <strong>Destinataire :</strong>
+                                                        {{ $destinataire?->name ?? 'Non disponible' }}
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="sujet{{ $commande->id }}" class="form-label">Sujet *</label>
+                                                        <input type="text"
+                                                               class="form-control"
+                                                               id="sujet{{ $commande->id }}"
+                                                               name="sujet"
+                                                               value="Concernant la commande {{ $commande->numero_commande }}"
+                                                               required
+                                                               maxlength="255">
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <label for="contenu{{ $commande->id }}" class="form-label">Message *</label>
+                                                        <textarea class="form-control"
+                                                                  id="contenu{{ $commande->id }}"
+                                                                  name="contenu"
+                                                                  rows="6"
+                                                                  required
+                                                                  maxlength="5000"
+                                                                  placeholder="Écrivez votre message ici..."></textarea>
+                                                        <small class="text-muted">Maximum 5000 caractères</small>
+                                                    </div>
+                                                </div>
+
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                        <i class="fas fa-times me-1"></i> Fermer
+                                                    </button>
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fas fa-paper-plane me-1"></i> Envoyer le message
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Modal Annulation avec motif (pour clients) -->
+                                @if(auth()->user()->isClient() && in_array($commande->statut, ['en_attente','confirmee']))
+                                    @php
+                                        $piecesSupprimees = $commande->items->filter(function($item) {
+                                            return is_null($item->piece);
+                                        });
+                                        $peutAnnuler = $piecesSupprimees->isEmpty();
+                                    @endphp
+
+                                    @if($peutAnnuler)
+                                        <div class="modal fade" id="annulerModal{{ $commande->id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">
+                                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                                            Annuler la commande
+                                                        </h5>
+                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <form action="{{ route('commandes.annuler', $commande) }}" method="POST">
+                                                        @csrf
+                                                        @method('DELETE')
+
+                                                        <div class="modal-body">
+                                                            <div class="alert alert-warning">
+                                                                <i class="fas fa-info-circle me-2"></i>
+                                                                Vous êtes sur le point d'annuler la commande <strong>{{ $commande->numero_commande }}</strong>
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                <label for="motif_annulation{{ $commande->id }}" class="form-label">
+                                                                    Motif d'annulation *
+                                                                </label>
+                                                                <textarea class="form-control"
+                                                                          id="motif_annulation{{ $commande->id }}"
+                                                                          name="motif_annulation"
+                                                                          rows="4"
+                                                                          required
+                                                                          minlength="10"
+                                                                          maxlength="500"
+                                                                          placeholder="Veuillez expliquer la raison de l'annulation (minimum 10 caractères)..."></textarea>
+                                                                <small class="text-muted">
+                                                                    <i class="fas fa-info-circle"></i>
+                                                                    Ce motif sera envoyé au vendeur par messagerie (10-500 caractères).
+                                                                </small>
+                                                            </div>
+
+                                                            <div class="alert alert-info mb-0">
+                                                                <small>
+                                                                    <i class="fas fa-lightbulb me-1"></i>
+                                                                    Un message sera automatiquement envoyé à
+                                                                    @php
+                                                                        $casseName = $commande->items->first()?->piece?->user?->name ?? 'le vendeur';
+                                                                    @endphp
+                                                                    <strong>{{ $casseName }}</strong>
+                                                                    avec votre motif d'annulation.
+                                                                </small>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                                <i class="fas fa-times me-1"></i> Fermer
+                                                            </button>
+                                                            <button type="submit" class="btn btn-danger">
+                                                                <i class="fas fa-ban me-1"></i> Confirmer l'annulation
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 @endif
                             @endforeach
                             </tbody>
