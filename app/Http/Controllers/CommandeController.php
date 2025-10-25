@@ -71,6 +71,8 @@ class CommandeController extends Controller
     }
     public function confirme(Request $request) {
         // dd($request->all());
+        $client = $request->all();
+
         $montant = $request->panier_total * env('TAUX_PAIEMENT', 0.05);
 
         $casse = json_decode($request->casse);
@@ -95,7 +97,7 @@ class CommandeController extends Controller
         }
 
         // dd("*145*1*$montant*$request->mode_paiement#", $request);
-        return view('commande.comfirme', compact('shortCode', 'montant', 'payWay', 'total'));
+        return view('commande.comfirme', compact('shortCode', 'montant', 'payWay', 'total', 'client'));
     }
 
     // Stocker une commande
@@ -171,7 +173,8 @@ class CommandeController extends Controller
         $info = $item->piece->user->telephone ?  $item->piece->user->telephone : "90992020 ou 99440449";
 
         return redirect()->route('commandes.show', $commande)
-            ->with('success', 'Commande créée avec succès. veuillez completer l\'operation par un depot sur le ' . $info);
+            ->with('success', 'Commande créée avec succès.');
+            // ->with('success', 'Commande créée avec succès. veuillez completer l\'operation par un depot sur le ' . $info);
     }
 
     // Afficher une commande
