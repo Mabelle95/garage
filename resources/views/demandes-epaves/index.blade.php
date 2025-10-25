@@ -21,9 +21,9 @@
         </ul>
 
         <div class="tab-content">
-            <!-- Mes demandes -->
-            <div class="tab-pane fade {{ request('tab') !== 'disponibles' ? 'show active' : '' }}"
-                 id="mes-demandes">
+
+            {{-- ✅ Onglet Mes Annonces --}}
+            <div class="tab-pane fade {{ request('tab') !== 'disponibles' ? 'show active' : '' }}" id="mes-demandes">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1>Mes annonces</h1>
                     <a href="{{ route('demandes-epaves.create') }}" class="btn btn-primary">
@@ -51,14 +51,14 @@
                                     @foreach($mesDemandes as $demande)
                                         <tr>
                                             <td>
-                                                <span class="badge {{ $demande->type_badge_class }}">
-                                                    @if($demande->type === 'vehicule')
-                                                        <i class="fas fa-car"></i>
-                                                    @else
-                                                        <i class="fas fa-car-crash"></i>
-                                                    @endif
-                                                    {{ $demande->type_libelle }}
-                                                </span>
+                                            <span class="badge {{ $demande->type_badge_class }}">
+                                                @if($demande->type === 'vehicule')
+                                                    <i class="fas fa-car"></i>
+                                                @else
+                                                    <i class="fas fa-car-crash"></i>
+                                                @endif
+                                                {{ $demande->type_libelle }}
+                                            </span>
                                             </td>
                                             <td>
                                                 <strong>{{ $demande->marque }} {{ $demande->modele }}</strong><br>
@@ -77,19 +77,41 @@
                                                 <span class="badge bg-secondary">{{ ucfirst($demande->etat) }}</span>
                                             </td>
                                             <td>
-                                                <span class="badge bg-{{ $demande->offres->count() > 0 ? 'success' : 'secondary' }}">
-                                                    {{ $demande->offres->count() }} offre(s)
-                                                </span>
+                                            <span class="badge bg-{{ $demande->offres->count() > 0 ? 'success' : 'secondary' }}">
+                                                {{ $demande->offres->count() }} offre(s)
+                                            </span>
                                             </td>
                                             <td>
-                                                <span class="badge {{ $demande->statut_badge_class }}">
+                                                @if($demande->statut === 'vendu')
+                                                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Vendu</span>
+                                                @elseif($demande->statut === 'accepte')
+                                                    <span class="badge bg-info"><i class="fas fa-handshake"></i> Offre acceptée</span>
+                                                @else
+                                                    <span class="badge {{ $demande->statut_badge_class }}">
                                                     {{ ucfirst(str_replace('_', ' ', $demande->statut)) }}
                                                 </span>
+                                                @endif
                                             </td>
                                             <td>
-                                                <a href="{{ route('demandes-epaves.show', $demande) }}" class="btn btn-sm btn-outline-primary">
-                                                    <i class="fas fa-eye"></i> Détails
-                                                </a>
+                                                <div class="btn-group">
+                                                    <a href="{{ route('demandes-epaves.show', $demande) }}"
+                                                       class="btn btn-sm btn-outline-primary" title="Voir les détails">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+
+                                                    @if(in_array($demande->statut, ['vendu', 'accepte']))
+                                                        @php
+                                                            $offreAcceptee = $demande->offres->where('statut', 'accepte')->first();
+                                                        @endphp
+                                                        @if($offreAcceptee && $offreAcceptee->user)
+                                                            <a href="{{ route('messages.index') }}"
+                                                               class="btn btn-sm btn-outline-success"
+                                                               title="Contacter l'acheteur">
+                                                                <i class="fas fa-comment-dots"></i>
+                                                            </a>
+                                                        @endif
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -103,7 +125,7 @@
                             <div class="text-center py-5">
                                 <i class="fas fa-car-crash fa-4x text-muted mb-3"></i>
                                 <h4>Aucune annonce</h4>
-                                <p class="text-muted">Vous n'avez pas encore créé d'annonce de vente</p>
+                                <p class="text-muted">Vous n'avez pas encore créé d'annonce de vente.</p>
                                 <a href="{{ route('demandes-epaves.create') }}" class="btn btn-primary">
                                     <i class="fas fa-plus"></i> Créer une annonce
                                 </a>
@@ -113,14 +135,13 @@
                 </div>
             </div>
 
-            <!-- Demandes disponibles -->
-            <div class="tab-pane fade {{ request('tab') === 'disponibles' ? 'show active' : '' }}"
-                 id="demandes-disponibles">
+            {{-- ✅ Onglet Annonces Disponibles --}}
+            <div class="tab-pane fade {{ request('tab') === 'disponibles' ? 'show active' : '' }}" id="demandes-disponibles">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h1>Véhicules et épaves disponibles</h1>
                 </div>
 
-                <!-- Filtres -->
+                {{-- Filtres --}}
                 <div class="card shadow mb-4">
                     <div class="card-body">
                         <form method="GET" class="row g-3">
@@ -162,6 +183,7 @@
                     </div>
                 </div>
 
+                {{-- Liste des annonces disponibles --}}
                 <div class="card shadow">
                     <div class="card-body">
                         @if($autresDemandes->count() > 0)
@@ -183,14 +205,14 @@
                                     @foreach($autresDemandes as $demande)
                                         <tr>
                                             <td>
-                                                <span class="badge {{ $demande->type_badge_class }}">
-                                                    @if($demande->type === 'vehicule')
-                                                        <i class="fas fa-car"></i>
-                                                    @else
-                                                        <i class="fas fa-car-crash"></i>
-                                                    @endif
-                                                    {{ $demande->type_libelle }}
-                                                </span>
+                                            <span class="badge {{ $demande->type_badge_class }}">
+                                                @if($demande->type === 'vehicule')
+                                                    <i class="fas fa-car"></i>
+                                                @else
+                                                    <i class="fas fa-car-crash"></i>
+                                                @endif
+                                                {{ $demande->type_libelle }}
+                                            </span>
                                             </td>
                                             <td>
                                                 <strong>{{ $demande->marque }} {{ $demande->modele }}</strong><br>
@@ -201,8 +223,8 @@
                                             <td>
                                                 {{ $demande->user->name }}
                                                 <span class="badge bg-{{ $demande->user->role->value === 'casse' ? 'success' : 'primary' }}">
-                                                    {{ ucfirst($demande->user->role->value) }}
-                                                </span>
+                                                {{ ucfirst($demande->user->role->value) }}
+                                            </span>
                                             </td>
                                             <td>
                                                 @if($demande->prix_souhaite)
@@ -211,37 +233,34 @@
                                                     <span class="text-muted">Non spécifié</span>
                                                 @endif
                                             </td>
+                                            <td><span class="badge bg-secondary">{{ ucfirst($demande->etat) }}</span></td>
                                             <td>
-                                                <span class="badge bg-secondary">{{ ucfirst($demande->etat) }}</span>
+                                            <span class="badge bg-{{ $demande->offres->count() > 0 ? 'success' : 'secondary' }}">
+                                                {{ $demande->offres->count() }} offre(s)
+                                            </span>
                                             </td>
                                             <td>
-                                                <span class="badge bg-{{ $demande->offres->count() > 0 ? 'success' : 'secondary' }}">
-                                                    {{ $demande->offres->count() }} offre(s)
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="badge {{ $demande->statut_badge_class }}">
+                                                @if($demande->statut === 'vendu')
+                                                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Vendu</span>
+                                                @elseif($demande->statut === 'accepte')
+                                                    <span class="badge bg-info"><i class="fas fa-handshake"></i> Offre acceptée</span>
+                                                @else
+                                                    <span class="badge {{ $demande->statut_badge_class }}">
                                                     {{ ucfirst(str_replace('_', ' ', $demande->statut)) }}
                                                 </span>
+                                                @endif
                                             </td>
                                             <td>
                                                 <div class="btn-group">
-                                                    @if($demande->statut === 'en_attente')
-                                                        @if($demande->hasOffreFrom(auth()->id()))
-                                                            <a href="{{ route('demandes-epaves.show', $demande) }}" class="btn btn-sm btn-success">
-                                                                <i class="fas fa-check"></i> Offre faite
-                                                            </a>
-                                                        @else
-                                                            <a href="{{ route('demandes-epaves.show', $demande) }}#faire-offre"
-                                                               class="btn btn-sm btn-warning">
-                                                                <i class="fas fa-gavel"></i> Faire offre
-                                                            </a>
-                                                        @endif
-                                                    @else
-                                                        <a href="{{ route('demandes-epaves.show', $demande) }}" class="btn btn-sm btn-outline-primary">
-                                                            <i class="fas fa-eye"></i> Voir
-                                                        </a>
-                                                    @endif
+                                                    <a href="{{ route('demandes-epaves.show', $demande) }}"
+                                                       class="btn btn-sm btn-outline-primary" title="Voir les détails">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {{-- ✅ Lien vers le chat --}}
+                                                    <a href="{{ route('messages.conversation', ['userId' => $demande->user->id]) }}"
+                                                       class="btn btn-sm btn-outline-success" title="Contacter le vendeur">
+                                                        <i class="fas fa-comment-dots"></i>
+                                                    </a>
                                                 </div>
                                             </td>
                                         </tr>
@@ -249,14 +268,16 @@
                                     </tbody>
                                 </table>
                             </div>
+
                             <div class="d-flex justify-content-center mt-4">
                                 {{ $autresDemandes->appends(['tab' => 'disponibles'])->links() }}
                             </div>
+
                         @else
                             <div class="text-center py-5">
                                 <i class="fas fa-search fa-4x text-muted mb-3"></i>
                                 <h4>Aucune annonce disponible</h4>
-                                <p class="text-muted">Aucun véhicule ou épave n'est actuellement disponible</p>
+                                <p class="text-muted">Aucun véhicule ou épave n'est actuellement disponible.</p>
                             </div>
                         @endif
                     </div>
@@ -264,4 +285,17 @@
             </div>
         </div>
     </div>
+
+    <style>
+        .btn-group {
+            display: flex;
+            gap: 5px;
+        }
+        .badge {
+            white-space: nowrap;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+    </style>
 @endsection

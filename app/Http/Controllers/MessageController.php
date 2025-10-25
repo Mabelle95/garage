@@ -22,6 +22,7 @@ class MessageController extends Controller
     /**
      * Charger une conversation avec un utilisateur
      */
+
     public function getConversation($userId)
     {
         $otherUser = User::findOrFail($userId);
@@ -38,6 +39,7 @@ class MessageController extends Controller
             ->with(['expediteur', 'destinataire', 'commande'])
             ->orderBy('created_at', 'asc')
             ->get();
+
 
         return response()->json([
             'otherUser' => [
@@ -266,4 +268,17 @@ class MessageController extends Controller
 
         return response()->json(['count' => $count]);
     }
+
+    public function showConversation($userId)
+    {
+        // Appel de ta fonction existante
+        $response = $this->getConversation($userId);
+        $data = $response->getData(true); // Convertit le JSON en tableau PHP
+
+        return view('messages.conversation', [
+            'conversation' => $data,
+            'userId' => $userId
+        ]);
+    }
+
 }

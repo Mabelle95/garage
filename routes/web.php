@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     // Notifications
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
+        Route::get('/{notification}/view', [NotificationController::class, 'view'])->name('view'); // NOUVELLE ROUTE
         Route::put('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('read');
         Route::put('/read-all', [NotificationController::class, 'markAllAsRead'])->name('read-all');
     });
@@ -76,8 +77,11 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
         Route::get('/', [MessageController::class, 'index'])->name('index');
 
         // Récupérer une conversation avec un utilisateur
-        Route::get('/conversation/{userId}', [MessageController::class, 'getConversation'])->name('conversation');
+// Route pour la vue HTML
+        Route::get('/conversation/{userId}', [MessageController::class, 'showConversation'])->name('conversation');
 
+// Route API pour AJAX
+        Route::get('/api/conversation/{userId}', [MessageController::class, 'getConversation'])->name('conversation.api');
         // Envoyer un message rapide (AJAX)
         Route::post('/send-quick', [MessageController::class, 'sendQuick'])->name('send-quick');
 

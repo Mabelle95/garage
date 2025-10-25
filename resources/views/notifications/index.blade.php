@@ -25,13 +25,25 @@
                             <div class="list-group-item {{ $notification->lu ? '' : 'bg-light' }}">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1">
-                                        <h6 class="mb-1">{{ $notification->titre }}</h6>
+                                        <h6 class="mb-1">
+                                            @if(!$notification->lu)
+                                                <span class="badge bg-primary me-2">Nouveau</span>
+                                            @endif
+                                            {{ $notification->titre }}
+                                        </h6>
                                         <p class="mb-1">{{ $notification->message }}</p>
                                         <small class="text-muted">
                                             <i class="fas fa-clock"></i> {{ $notification->created_at->diffForHumans() }}
                                         </small>
                                     </div>
-                                    <div class="ms-3">
+                                    <div class="ms-3 d-flex gap-2">
+                                        {{-- Bouton pour voir le contenu --}}
+                                        <a href="{{ route('notifications.view', $notification) }}"
+                                           class="btn btn-sm btn-outline-info"
+                                           title="Voir le contenu">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+
                                         @if(!$notification->lu)
                                             <form action="{{ route('notifications.read', $notification) }}" method="POST" class="d-inline">
                                                 @csrf

@@ -182,4 +182,15 @@ class NotificationService
 
         return $user->notifications()->update(['lu' => true]);
     }
+
+    public function discussionCreee(User $user, DemandeEpave $demandeEpave)
+    {
+        Notification::create([
+            'user_id' => $user->id,
+            'titre' => 'Nouvelle discussion créée',
+            'message' => "Une discussion a été créée suite à l'acceptation de votre offre pour le {$demandeEpave->type_libelle} : {$demandeEpave->marque} {$demandeEpave->modele}. Vous pouvez maintenant échanger avec le vendeur.",
+            'type' => 'discussion',
+            'lu' => false
+        ]);
+    }
 }

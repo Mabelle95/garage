@@ -7,6 +7,7 @@ use App\Models\OffreEpave;
 use App\Models\User;
 use App\Models\Marque;
 use App\Models\Modele;
+use App\Models\Message;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -127,11 +128,15 @@ class DemandeEpaveController extends Controller
         }
 
         DB::transaction(function() use ($offre, $demandeEpave) {
+            // Mettre à jour les statuts
             $offre->update(['statut' => 'accepte']);
             $demandeEpave->offres()
                 ->where('id', '!=', $offre->id)
                 ->update(['statut' => 'refuse']);
             $demandeEpave->update(['statut' => 'vendu']);
+
+            // NOUVEAU : Créer automatiquement une discussion entre les deux parties
+            $this->creerDiscussionAutomatique($demandeEpave, $offre);
         });
 
         $this->notificationService->offreAcceptee($offre->user, $offre);
@@ -145,7 +150,38 @@ class DemandeEpaveController extends Controller
             $this->notificationService->offreRefusee($autreOffre->user, $autreOffre);
         }
 
-        return back()->with('success', 'Offre acceptée avec succès.');
+        // MODIFIÉ : Rediriger vers la messagerie au lieu de retourner en arrière
+        return redirect()->route('messages.index', ['user' => $offre->user_id])
+            ->with('success', 'Offre acceptée avec succès. Vous pouvez maintenant discuter avec l\'acheteur.');
+    }
+
+    /**
+     * NOUVELLE MÉTHODE : Créer une discussion automatique lors de l'acceptation d'une offre
+     */
+    private function creerDiscussionAutomatique(DemandeEpave $demandeEpave, OffreEpave $offre)
+    {
+        // Créer un message automatique du vendeur vers l'acheteur
+        $messageVendeur = Message::create([
+            'expediteur_id' => Auth::id(), // Le vendeur (qui accepte l'offre)
+            'destinataire_id' => $offre->user_id, // L'acheteur
+            'sujet' => "Offre acceptée - {$demandeEpave->marque} {$demandeEpave->modele}",
+            'contenu' => "Bonjour,\n\nJe viens d'accepter votre offre de " . number_format($offre->prix_offert, 0, ',', ' ') . " FCFA pour mon {$demandeEpave->type_libelle} : {$demandeEpave->marque} {$demandeEpave->modele} ({$demandeEpave->annee}).\n\nNous pouvons maintenant discuter des détails de la transaction et de la remise du véhicule.\n\nCordialement",
+            'lu' => false,
+            'commande_id' => null,
+        ]);
+
+        // Créer aussi un message automatique de l'acheteur vers le vendeur (pour initialiser la conversation)
+        Message::create([
+            'expediteur_id' => $offre->user_id, // L'acheteur
+            'destinataire_id' => Auth::id(), // Le vendeur
+            'sujet' => "Re: Offre acceptée - {$demandeEpave->marque} {$demandeEpave->modele}",
+            'contenu' => "Bonjour,\n\nMerci d'avoir accepté mon offre ! Je suis ravi que nous puissions conclure cette transaction.\n\nJe suis disponible pour discuter des modalités de paiement et de récupération du véhicule.\n\nCordialement",
+            'lu' => false,
+            'commande_id' => null,
+        ]);
+
+        // Notifier l'acheteur qu'une discussion a été créée
+        $this->notificationService->discussionCreee($offre->user, $demandeEpave);
     }
 
     public function refuserOffre(DemandeEpave $demandeEpave, OffreEpave $offre)
@@ -176,14 +212,6 @@ class DemandeEpaveController extends Controller
 
         return back()->with('success', 'Offre refusée avec succès. L\'acheteur pourra faire une nouvelle offre.');
     }
-
-
-
-
-
-
-
-
 
     public function index(Request $request)
     {
@@ -230,7 +258,6 @@ class DemandeEpaveController extends Controller
         $marques = Marque::active()->orderBy('nom')->get();
 
         $casse = auth()->user();
-        // dd($casse->isCasse() && $casse->isCompleted());
 
         if ($casse->isCasse() || $casse->isClient()) {
             if (!$casse->isCompleted()) {
@@ -240,23 +267,9 @@ class DemandeEpaveController extends Controller
 
             return view('demandes-epaves.create', compact('marques', 'casse'));
         } else {
-            abort();
+            abort(403);
         }
-
-        // dd($casse);
-
-        // $casseInfo = [
-        //     'nom' => $casse->name,
-        //     'email' => $casse->email,
-        //     'telephone' => $casse->telephone,
-        //     'adresse' => $casse->adresse,
-        // ];
-
-        // return view('demandes-epaves.create', compact('marques', 'casse'));
     }
-
-    //     return view('demandes-epaves.create', compact('marques'));
-    // }
 
     public function store(Request $request)
     {
@@ -320,8 +333,6 @@ class DemandeEpaveController extends Controller
         return redirect()->route('demandes-epaves.show', $demande)
             ->with('success', 'Demande créée avec succès.');
     }
-
-
 
     public function edit(DemandeEpave $demandeEpave)
     {
@@ -429,7 +440,4 @@ class DemandeEpaveController extends Controller
 
         return response()->json($modeles);
     }
-
-
-
 }
