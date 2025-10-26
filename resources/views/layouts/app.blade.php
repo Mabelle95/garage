@@ -56,6 +56,7 @@
 
                 @auth
                     {{-- Menu Casse --}}
+                    @if(!(auth()->user()->role->value === 'admin'))
 
                     <li class="nav-item">
                         <a class="nav-link {{ Request::is('demandes-epaves*') ? 'active' : '' }}" href="{{ route('demandes-epaves.index') }}">
@@ -63,6 +64,7 @@
                         </a>
                     </li>
 
+                    @endif
 
 
 

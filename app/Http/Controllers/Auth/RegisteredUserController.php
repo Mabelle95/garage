@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\CassePendingApprovalMail;
 use App\Models\User;
 use App\Enums\UserRole;
 use Illuminate\Auth\Events\Registered;
@@ -10,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -48,19 +50,23 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        // Si c'est une casse non approuvée, rediriger vers une page d'attente
+        // Si c'est une casse non approuvée, notifier les admins et rediriger
         if ($role === UserRole::CASSE && !$user->approved) {
-            Auth::logout();
+            // Envoyer un email à tous les administrateurs
+            $admins = User::where('role', UserRole::ADMIN->value)->get();
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->send(new CassePendingApprovalMail($user));
+            }
+
             return redirect()->route('auth.pending-approval')->with('info',
                 'Votre compte a été créé avec succès. Il est en attente d\'approbation par un administrateur. Vous recevrez un email une fois votre compte validé.'
             );
         }
 
+        Auth::login($user);
+
         return redirect()->intended(route('dashboard'));
     }
-
     protected function redirectTo(): string
     {
         $user = Auth::user();

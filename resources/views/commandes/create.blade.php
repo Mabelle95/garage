@@ -69,7 +69,7 @@
 
                             {{-- Information recuperer depuis panier --}}
                             <input type="hidden" name="casse" value="{{ $casse }}">
-                            
+
                             <input type="hidden" name="panier_id" value="{{ $panier->id }}">
                             <input type="hidden" name="panier_items" value="{{ $panier->items }}">
                             <input type="hidden" name="panier_total" id="panier_total" value="{{ $panier->getTotal() }}">
@@ -80,8 +80,18 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="telephone_livraison" class="form-label">Téléphone de livraison *</label>
-                                <input type="text" class="form-control" id="telephone_livraison" name="telephone_livraison" required value="{{ old('telephone_livraison', auth()->user()->telephone ?? '') }}">
+                                <label for="telephone_livraison" class="form-label">Téléphone de livraison * (8 chiffres)</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="telephone_livraison"
+                                       name="telephone_livraison"
+                                       required
+                                       value="{{ old('telephone_livraison', auth()->user()->telephone ?? '') }}"
+                                       pattern="[0-9]{8}"
+                                       maxlength="8"
+                                       oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8)"
+                                       placeholder="Ex: 90123456">
+                                <small class="form-text text-muted">Entrez exactement 8 chiffres</small>
                             </div>
 
                             <div class="mb-3">
@@ -105,10 +115,10 @@
 
                                     {{-- <option value="{{ $casse->flooz_number ?? '99440449'}}">Flooz</option>
                                     <option value="{{ $casse->mixx_number ?? '90992020'}}">Mixx by yas</option> --}}
-                                                                        
+
                                     <option value="flooz">Flooz</option>
                                     <option value="mixx">Mixx by yas</option>
-                                    
+
                                     <option value="especes">Espèces (à la livraison)</option>
                                 </select>
                             </div>
@@ -139,7 +149,7 @@
                     document.getElementById('longitude').value = lon;
 
                     const adresse = document.getElementById('adresse_livraison');
-                    adresse.value += `Lat: ${lat}, Lon: ${lon}`;
+                    adresse.value += `\nLat: ${lat}, Lon: ${lon}`;
 
                     alert(`Votre position a été ajoutée.\nLatitude: ${lat}\nLongitude: ${lon}`);
                 }, err => {

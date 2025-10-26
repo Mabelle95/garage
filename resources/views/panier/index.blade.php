@@ -23,9 +23,9 @@
                         <table class="table table-hover">
                             <thead>
                             <tr>
-                                <th>Pièce</th>
+                                <th>PiÃ¨ce</th>
                                 <th>Prix unitaire</th>
-                                <th>Quantité</th>
+                                <th>QuantitÃ©</th>
                                 <th>Total</th>
                                 <th>Actions</th>
                             </tr>
@@ -48,7 +48,7 @@
                                                 <strong>{{ $item->piece->nom ?? 'N/A' }}</strong><br>
                                                 <small class="text-muted">
                                                     @if($item->piece && $item->piece->vehicle)
-                                                        {{ $item->piece->vehicle->marque ?? '' }} {{ $item->piece->vehicle->modele ?? '' }} •
+                                                        {{ $item->piece->vehicle->marque ?? '' }} {{ $item->piece->vehicle->modele ?? '' }} â€¢
                                                         {{ $item->piece->vehicle->casse->nom_entreprise ?? '' }}
                                                     @endif
                                                 </small>
@@ -97,7 +97,7 @@
 
                         <div class="text-end">
                             <h4>Sous-total: {{ number_format($panier->getTotal(), 2, ',', ' ') }} FCFA</h4>
-                            <small class="text-muted">Frais de livraison calculés à l'étape suivante</small><br>
+                            <small class="text-muted">Frais de livraison calculÃ©s Ã  l'Ã©tape suivante</small><br>
                             <a href="{{ route('commandes.create') }}" class="btn btn-primary btn-lg mt-2">
                                 <i class="fas fa-credit-card"></i> Commander maintenant
                             </a>
@@ -109,9 +109,9 @@
             <div class="text-center py-5">
                 <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
                 <h4>Votre panier est vide</h4>
-                <p class="text-muted">Ajoutez des pièces détachées à votre panier</p>
+                <p class="text-muted">Ajoutez des piÃ¨ces dÃ©tachÃ©es Ã  votre panier</p>
                 <a href="{{ route('pieces.index') }}" class="btn btn-primary">
-                    <i class="fas fa-cog"></i> Parcourir les pièces
+                    <i class="fas fa-cog"></i> Parcourir les piÃ¨ces
                 </a>
             </div>
         @endif

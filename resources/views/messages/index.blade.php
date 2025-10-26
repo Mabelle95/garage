@@ -600,7 +600,7 @@
             }
 
             // Charger les messages
-            fetch(`/messages/conversation/${userId}`)
+            fetch(`/messages/api/conversation/${userId}`)
                 .then(response => response.json())
                 .then(data => {
                     displayConversation(data);

@@ -165,13 +165,16 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
         Route::put('/commandes/{commande}/statut', [CommandeController::class, 'updateStatut'])->name('commandes.update-statut');
 
         // Stocks
+// Stocks - Route mise à jour pour inclure pièces ET épaves
         Route::get('/stocks', function () {
             $user = Auth::user();
 
-            // Toutes les pièces de la casse (utilisateur connecté)
+            // ========================================
+            // DONNÉES POUR LES PIÈCES
+            // ========================================
             $pieces = $user->pieces()->get();
 
-            // Statistiques
+            // Statistiques pièces
             $totalPieces = $pieces->count();
             $totalStock = $pieces->sum('quantite');
             $piecesDisponibles = $pieces->where('disponible', true)->count();
@@ -180,13 +183,40 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
             $stockFaible = $pieces->where('quantite', '>', 0)->where('quantite', '<=', 3);
             $stockVide = $pieces->where('quantite', 0);
 
+            // ========================================
+            // DONNÉES POUR LES DEMANDES D'ÉPAVES
+            // ========================================
+            // Récupérer les demandes de l'utilisateur connecté
+            $mesDemandes = \App\Models\DemandeEpave::where('user_id', $user->id)
+                ->with(['offres'])
+                ->latest()
+                ->paginate(10, ['*'], 'mes_demandes');
+
+            // Statistiques des épaves
+            $statsEpaves = [
+                'vehicules' => \App\Models\DemandeEpave::where('user_id', $user->id)
+                    ->where('type', 'vehicule')
+                    ->count(),
+                'epaves' => \App\Models\DemandeEpave::where('user_id', $user->id)
+                    ->where('type', 'epave')
+                    ->count(),
+                'en_attente' => \App\Models\DemandeEpave::where('user_id', $user->id)
+                    ->where('statut', 'en_attente')
+                    ->count(),
+                'vendus' => \App\Models\DemandeEpave::where('user_id', $user->id)
+                    ->where('statut', 'vendu')
+                    ->count(),
+            ];
+
             return view('gestion.stocks', compact(
                 'pieces',
                 'totalPieces',
                 'totalStock',
                 'piecesDisponibles',
                 'stockFaible',
-                'stockVide'
+                'stockVide',
+                'mesDemandes',
+                'statsEpaves'
             ));
         })->name('stocks');
 

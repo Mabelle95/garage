@@ -219,19 +219,19 @@
                                                 <i class="fas fa-eye"></i>
                                             </a>
 
+                                            {{-- Remplacer la section du bouton "Ajouter au panier" dans index.blade.php --}}
+                                            {{-- Ligne ~198 à ~220 environ --}}
+
                                             @if(auth()->user()->isClient())
                                                 @if($piece->disponible && $piece->quantite > 0)
                                                     <button type="button"
                                                             class="btn btn-sm btn-outline-success add-to-cart-btn"
-                                                            data-piece="{{ $piece->id }}"
+                                                            data-piece-id="{{ $piece->id }}"
+                                                            data-piece-name="{{ $piece->nom }}"
+                                                            data-piece-max="{{ $piece->quantite }}"
                                                             title="Ajouter au panier">
                                                         <i class="fas fa-cart-plus"></i>
                                                     </button>
-                                                    {{-- <button type="button" class="btn btn-sm btn-outline-success add-to-cart-btn"
-                                                            data-piece-id="{{ $piece->id }}" data-piece-name="{{ $piece->nom }}"
-                                                            data-piece-max="{{ $piece->quantite }}" title="Ajouter au panier">
-                                                        <i class="fas fa-cart-plus"></i>
-                                                    </button> --}}
                                                 @else
                                                     <button type="button"
                                                             class="btn btn-sm btn-outline-secondary"
@@ -241,7 +241,6 @@
                                                     </button>
                                                 @endif
                                             @endif
-
                                             @if(auth()->user()->isCasse() && $piece->user_id === auth()->id())
                                                 <a href="{{ route('pieces.edit', $piece) }}"
                                                    class="btn btn-sm btn-outline-warning"

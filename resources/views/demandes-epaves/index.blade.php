@@ -99,15 +99,16 @@
                                                         <i class="fas fa-eye"></i>
                                                     </a>
 
+                                                    {{-- ✅ Afficher l'icône de messagerie uniquement si statut = vendu ou accepte --}}
                                                     @if(in_array($demande->statut, ['vendu', 'accepte']))
                                                         @php
                                                             $offreAcceptee = $demande->offres->where('statut', 'accepte')->first();
                                                         @endphp
                                                         @if($offreAcceptee && $offreAcceptee->user)
-                                                            <a href="{{ route('messages.index') }}"
+                                                            <a href="{{ route('messages.conversation', ['userId' => $offreAcceptee->user->id]) }}"
                                                                class="btn btn-sm btn-outline-success"
                                                                title="Contacter l'acheteur">
-                                                                <i class="fas fa-comment-dots"></i>
+                                                                <i class="fas fa-envelope"></i>
                                                             </a>
                                                         @endif
                                                     @endif
@@ -256,11 +257,7 @@
                                                        class="btn btn-sm btn-outline-primary" title="Voir les détails">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    {{-- ✅ Lien vers le chat --}}
-                                                    <a href="{{ route('messages.conversation', ['userId' => $demande->user->id]) }}"
-                                                       class="btn btn-sm btn-outline-success" title="Contacter le vendeur">
-                                                        <i class="fas fa-comment-dots"></i>
-                                                    </a>
+                                                    {{-- ✅ SUPPRIMÉ : Pas d'icône de messagerie dans "Annonces disponibles" --}}
                                                 </div>
                                             </td>
                                         </tr>
