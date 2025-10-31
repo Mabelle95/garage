@@ -139,7 +139,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
     // Commandes client
     Route::prefix('commandes')->name('commandes.')->group(function () {
         Route::get('/', [CommandeController::class, 'index'])->name('index');
-        Route::get('/create', [CommandeController::class, 'create'])->name('create');
+        Route::get('/create/{casseUserId}', [CommandeController::class, 'create'])->name('create');
         Route::post('/', [CommandeController::class, 'store'])->name('store');
 
         Route::post('/confirme', [CommandeController::class, 'confirme'])->name('confirme');

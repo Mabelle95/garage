@@ -48,12 +48,28 @@ class CommandeController extends Controller
     }
 
     // Formulaire de création de commande
-    public function create()
+    public function create(User $casseUserId)
     {
         $panier = Auth::user()->panier()->with(['items.piece'])->first();
         $casse_id = $panier->items[0]->piece->user_id;
         $casse = User::query()->where('id', $casse_id)->first();
-        // dd($casse);
+
+        // dd($casseUserId->id);
+        // $commande = Panier::query()->with(['items'])->get();
+
+        // dd($panier->);
+
+        $panierCasse = [];
+        $totalCasse = 0;
+
+        foreach ($panier->items as $item) {
+            // dd($item->piece->user_id);
+            if ($item->piece->user_id === $casseUserId->id) {
+                $panierCasse[] = $item;
+                $totalCasse += $item->piece->prix * $item->quantite;
+            }
+        }
+
 
         if (!$panier || $panier->items->isEmpty()) {
             return redirect()->route('panier.index')
@@ -67,7 +83,7 @@ class CommandeController extends Controller
             }
         }
 
-        return view('commandes.create', compact('panier', 'casse'));
+        return view('commandes.create', compact('panier', 'casse', 'panierCasse', 'totalCasse'));
     }
     public function confirme(Request $request) {
         // dd($request->all());

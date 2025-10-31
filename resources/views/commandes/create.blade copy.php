@@ -17,7 +17,7 @@
                 <div class="card shadow mb-4">
                     <div class="card-header"><h5 class="m-0">Récapitulatif de la commande</h5></div>
                     <div class="card-body">
-                        @if($panierCasse && $panier->items->count() > 0)
+                        @if($panier && $panier->items->count() > 0)
                             <div class="table-responsive">
                                 <table class="table table-sm">
                                     <thead>
@@ -29,7 +29,7 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    @foreach($panierCasse as $item)
+                                    @foreach($panier->items as $item)
                                         <tr>
                                             <td>
                                                 <strong>{{ $item->piece->nom ?? 'N/A' }}</strong><br>
@@ -49,8 +49,7 @@
                                     <tfoot>
                                     <tr>
                                         <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                                        {{-- <td><strong>{{ number_format($panier->getTotal() ?? 0, 2, ',', ' ') }} FCFA</strong></td> --}}
-                                        <td><strong>{{ number_format($totalCasse ?? 0, 2, ',', ' ') }} FCFA</strong></td>
+                                        <td><strong>{{ number_format($panier->getTotal() ?? 0, 2, ',', ' ') }} FCFA</strong></td>
                                     </tr>
                                     </tfoot>
                                 </table>
@@ -129,7 +128,7 @@
                                 <textarea class="form-control" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
                             </div>
 
-                            <button type="submit" class="btn btn-primary btn-lg" {{ !$panierCasse|| $panier->items->count() === 0 ? 'disabled' : '' }}>
+                            <button type="submit" class="btn btn-primary btn-lg" {{ !$panier || $panier->items->count() === 0 ? 'disabled' : '' }}>
                                 <i class="fas fa-credit-card"></i> Confirmer la commande
                             </button>
                         </form>

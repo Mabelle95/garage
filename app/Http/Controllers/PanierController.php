@@ -18,7 +18,41 @@ class PanierController extends Controller
             $panier = Auth::user()->panier()->create();
         }
 
-        return view('panier.index', compact('panier'));
+        $panierTotal = number_format($panier->getTotal(), 2, ',', ' ');
+
+        $panier = $panier->items->load('piece.vehicle.casse')->toArray();
+
+        // dd($panier);
+        $panierParCasse = [];
+        $totalParCmd = [];
+
+        foreach ($panier as $item) {
+            // dd($panier);
+            // $totalParCasse = $item['quantite'] * $item['piece']['prix'];
+            // $totalParCasse = 0;
+            
+            $casseId = $item['piece']['user_id'] ?? null;
+            // $totalParCmd[$casseId] = number_format($totalParCasse,2,',',' ');
+            // $totalParCmd[$casseId] = 0;
+
+            if ($casseId) {
+                $panierParCasse[$casseId][] = $item;
+                // dd($item);
+
+                $totalParItem = $item['quantite'] * $item['piece']['prix'];
+                // $totalParCmd[$casseId] = number_format($totalParItem,2,',',' ');
+
+                if (isset($totalParCmd[$casseId])) {
+                    $panierParCasse[$casseId] += $totalParItem;
+                } else {
+                    $totalParCmd[$casseId] = $totalParItem;
+                }
+            }
+        }
+
+        // dd(count($panierParCasse));
+        // dd($panierParCasse);
+        return view('panier.index', compact('panier', 'panierTotal', 'panierParCasse', 'totalParCmd'));
     }
 
     public function add(Request $request, Piece $piece)
