@@ -101,10 +101,10 @@
                                 <div class="col-md-3 mb-3">
                                     <label for="code_postal" class="form-label">Code postal</label>
                                     <input type="text" class="form-control" id="code_postal" name="code_postal"
-                                           pattern="[0-9]{5}"
+                                           pattern="[0-9]{3}"
                                            maxlength="5"
                                            title="Le code postal doit contenir exactement 5 chiffres"
-                                           placeholder="Ex: 01000"
+                                           placeholder="Ex: 001"
                                            value="{{ old('code_postal', auth()->user()->code_postal) }}">
                                     <div class="form-text">5 chiffres</div>
                                 </div>
