@@ -1078,90 +1078,92 @@ php artisan tinker
 >>> app(\App\Http\Requests\StoreVehicleRequest::class)->rules()
 
 ==============================================
-*/ longitude doit être comprise entre -180 et 180.',
-        ];
-    }
-}
+*/ 
 
-// app/Http/Requests/UpdatePasswordRequest.php
-namespace App\Http\Requests;
+// longitude doit être comprise entre -180 et 180.',
+//         ];
+//     }
+// }
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Hash;
+// // app/Http/Requests/UpdatePasswordRequest.php
+// namespace App\Http\Requests;
 
-class UpdatePasswordRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
-    }
+// use Illuminate\Foundation\Http\FormRequest;
+// use Illuminate\Support\Facades\Hash;
 
-    public function rules(): array
-    {
-        return [
-            'current_password' => ['required', 'string'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ];
-    }
+// class UpdatePasswordRequest extends FormRequest
+// {
+//     public function authorize(): bool
+//     {
+//         return true;
+//     }
 
-    public function messages(): array
-    {
-        return [
-            'current_password.required' => 'Le mot de passe actuel est obligatoire.',
-            'password.required' => 'Le nouveau mot de passe est obligatoire.',
-            'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
-            'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
-        ];
-    }
+//     public function rules(): array
+//     {
+//         return [
+//             'current_password' => ['required', 'string'],
+//             'password' => ['required', 'string', 'min:8', 'confirmed'],
+//         ];
+//     }
 
-    public function withValidator($validator)
-    {
-        $validator->after(function ($validator) {
-            if (!Hash::check($this->current_password, auth()->user()->password)) {
-                $validator->errors()->add('current_password', 'Le mot de passe actuel est incorrect.');
-            }
-        });
-    }
-}
+//     public function messages(): array
+//     {
+//         return [
+//             'current_password.required' => 'Le mot de passe actuel est obligatoire.',
+//             'password.required' => 'Le nouveau mot de passe est obligatoire.',
+//             'password.min' => 'Le mot de passe doit contenir au moins 8 caractères.',
+//             'password.confirmed' => 'La confirmation du mot de passe ne correspond pas.',
+//         ];
+//     }
 
-// app/Http/Requests/SearchRequest.php
-namespace App\Http\Requests;
+//     public function withValidator($validator)
+//     {
+//         $validator->after(function ($validator) {
+//             if (!Hash::check($this->current_password, auth()->user()->password)) {
+//                 $validator->errors()->add('current_password', 'Le mot de passe actuel est incorrect.');
+//             }
+//         });
+//     }
+// }
 
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
+// // app/Http/Requests/SearchRequest.php
+// namespace App\Http\Requests;
 
-class SearchRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
-    }
+// use Illuminate\Foundation\Http\FormRequest;
+// use Illuminate\Validation\Rule;
 
-    public function rules(): array
-    {
-        return [
-            'q' => ['nullable', 'string', 'max:255'],
-            'type' => ['nullable', Rule::in(['all', 'pieces', 'vehicles', 'casses'])],
-            'marque' => ['nullable', 'string', 'max:100'],
-            'modele' => ['nullable', 'string', 'max:100'],
-            'annee' => ['nullable', 'integer', 'min:1900', 'max:' . (date('Y') + 1)],
-            'prix_min' => ['nullable', 'numeric', 'min:0'],
-            'prix_max' => ['nullable', 'numeric', 'min:0'],
-            'etat' => ['nullable', Rule::in(['bon', 'moyen', 'mauvais', 'epave'])],
-            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
-            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-            'radius' => ['nullable', 'integer', 'min:1', 'max:200'],
-            'sort' => ['nullable', Rule::in(['price_asc', 'price_desc', 'date_asc', 'date_desc', 'distance'])],
-            'per_page' => ['nullable', 'integer', 'min:6', 'max:50'],
-        ];
-    }
+// class SearchRequest extends FormRequest
+// {
+//     public function authorize(): bool
+//     {
+//         return true;
+//     }
 
-    public function messages(): array
-    {
-        return [
-            'q.max' => 'La recherche ne peut pas dépasser 255 caractères.',
-            'type.in' => 'Le type de recherche sélectionné est invalide.',
-            'prix_min.min' => 'Le prix minimum doit être positif.',
-            'prix_max.min' => 'Le prix maximum doit être positif.',
-            'latitude.between' => 'La latitude doit être comprise entre -90 et 90.',
-            'longitude.between' => 'La
+//     public function rules(): array
+//     {
+//         return [
+//             'q' => ['nullable', 'string', 'max:255'],
+//             'type' => ['nullable', Rule::in(['all', 'pieces', 'vehicles', 'casses'])],
+//             'marque' => ['nullable', 'string', 'max:100'],
+//             'modele' => ['nullable', 'string', 'max:100'],
+//             'annee' => ['nullable', 'integer', 'min:1900', 'max:' . (date('Y') + 1)],
+//             'prix_min' => ['nullable', 'numeric', 'min:0'],
+//             'prix_max' => ['nullable', 'numeric', 'min:0'],
+//             'etat' => ['nullable', Rule::in(['bon', 'moyen', 'mauvais', 'epave'])],
+//             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+//             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+//             'radius' => ['nullable', 'integer', 'min:1', 'max:200'],
+//             'sort' => ['nullable', Rule::in(['price_asc', 'price_desc', 'date_asc', 'date_desc', 'distance'])],
+//             'per_page' => ['nullable', 'integer', 'min:6', 'max:50'],
+//         ];
+//     }
+
+//     public function messages(): array
+//     {
+//         return [
+//             'q.max' => 'La recherche ne peut pas dépasser 255 caractères.',
+//             'type.in' => 'Le type de recherche sélectionné est invalide.',
+//             'prix_min.min' => 'Le prix minimum doit être positif.',
+//             'prix_max.min' => 'Le prix maximum doit être positif.',
+//             'latitude.between' => 'La latitude doit être comprise entre -90 et 90.',
+//             'longitude.between' => 'La

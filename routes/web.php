@@ -327,26 +327,31 @@ Route::prefix('payment')->name('payment.')->group(function () {
     Route::get('/cancel', [PaymentController::class, 'cancel'])->name('cancel');
 });
 
-// Webhook (exclu du CSRF)
-Route::post('/fedapay/webhook', [PaymentController::class, 'webhook'])->name('fedapay.webhook');
+// // Webhook (exclu du CSRF)
+// Route::post('/fedapay/webhook', [PaymentController::class, 'webhook'])->name('fedapay.webhook');
 
-// Route de test
-Route::get('/test-fedapay', function() {
-    try {
-        \FedaPay\FedaPay::setApiKey(config('fedapay.secret_key'));
-        \FedaPay\FedaPay::setEnvironment(config('fedapay.environment'));
+// // Route de test
+// Route::get('/test-fedapay', function() {
+//     try {
+//         \FedaPay\FedaPay::setApiKey(config('fedapay.secret_key'));
+//         \FedaPay\FedaPay::setEnvironment(config('fedapay.environment'));
 
-        return response()->json([
-            'status' => 'OK',
-            'environment' => config('fedapay.environment'),
-            'has_public_key' => !empty(config('fedapay.public_key')),
-            'has_secret_key' => !empty(config('fedapay.secret_key')),
-            'callback_url' => config('fedapay.callback_url'),
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'status' => 'ERROR',
-            'message' => $e->getMessage()
-        ], 500);
-    }
-});
+//         return response()->json([
+//             'status' => 'OK',
+//             'environment' => config('fedapay.environment'),
+//             'has_public_key' => !empty(config('fedapay.public_key')),
+//             'has_secret_key' => !empty(config('fedapay.secret_key')),
+//             'callback_url' => config('fedapay.callback_url'),
+//         ]);
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'status' => 'ERROR',
+//             'message' => $e->getMessage()
+//         ], 500);
+//     }
+// });
+
+
+// Route::get('/fadapay', function() {
+//     return view('payment.fedapay.index');
+// });
