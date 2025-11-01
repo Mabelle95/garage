@@ -147,6 +147,7 @@ Route::middleware(['auth', 'verified', 'approved'])->group(function () {
         Route::get('/{commande}', [CommandeController::class, 'show'])->name('show');
         Route::delete('/{commande}/annuler', [CommandeController::class, 'annuler'])->name('annuler');
         Route::put('/{commande}/update-adresse', [CommandeController::class, 'updateAdresse'])->name('update-adresse');
+        Route::delete('/{commande}', action: [CommandeController::class, 'delete'])->name('delete');
     });
     // });
 

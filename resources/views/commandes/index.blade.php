@@ -73,6 +73,13 @@
                                     <td>
                                         @if($commande->statut === 'annulee')
                                             <span class="text-danger fw-bold">Commande annulée</span>
+                                            <form action="{{ route('commandes.delete', $commande) }}" method="post">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger mt-2" onclick="return confirm('Supprimer définitivement cette commande ?')">
+                                                    <i class="fas fa-trash"></i> Supprimer
+                                                </button>
+                                            </form>
                                         @else
                                             <div class="btn-group">
                                                 <!-- Bouton Messagerie -->
@@ -102,7 +109,7 @@
                                                         <form action="{{ route('commandes.annuler', $commande) }}" method="POST" class="d-inline">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Annuler cette commande ?')">
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Annuler cette commande ?')" disabled="{{ $commande->statut === 'confirmee' }}">
                                                                 <i class="fas fa-times"></i> Annuler
                                                             </button>
                                                         </form>

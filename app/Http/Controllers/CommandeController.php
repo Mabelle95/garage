@@ -113,12 +113,16 @@ class CommandeController extends Controller
         }
 
         // dd("*145*1*$montant*$request->mode_paiement#", $request);
-        return view('commande.comfirme', compact('shortCode', 'montant', 'payWay', 'total', 'client'));
+        return view('commande.comfirme', compact('shortCode', 'montant', 'payWay', 'total', 'client', 'casse'));
     }
 
     // Stocker une commande
     public function store(Request $request)
     {
+        // dd($request->input('casse'));
+        $casseId = $request->input('casse');
+        $totalCmdCasse = 0;
+
         $request->validate([
             'adresse_livraison' => 'required|string',
             'telephone_livraison' => 'required|string',
@@ -140,16 +144,24 @@ class CommandeController extends Controller
             if (!$item->piece->disponible || $item->piece->quantite < $item->quantite) {
                 return back()->with('error', "Stock insuffisant pour la pièce: {$item->piece->nom}");
             }
+            // dd($item->piece->user_id);
+
+            if ($item->piece->user_id === (int) $request->input('casse')) {
+                    $totalCmdCasse += $item->piece->prix * $item->quantite;
+                }
+
+
         }
 
         $commande = null;
 
-        DB::transaction(function() use ($request, $panier, &$commande) {
+        DB::transaction(function() use ($request, $panier, &$commande, $totalCmdCasse) {
             $commande = Commande::create([
                 'user_id' => Auth::id(),
                 'numero_commande' => 'CMD-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
                 'statut' => 'en_attente',
-                'total' => $panier->getTotal(),
+                'total' => $totalCmdCasse,
+                // 'total' => $panier->getTotal(),
                 'adresse_livraison' => $request->adresse_livraison,
                 'telephone_livraison' => $request->telephone_livraison,
                 'mode_paiement' => $request->mode_paiement,
@@ -160,12 +172,18 @@ class CommandeController extends Controller
             ]);
 
             foreach ($panier->items as $item) {
-                CommandeItem::create([
-                    'commande_id' => $commande->id,
-                    'piece_id' => $item->piece_id,
-                    'quantite' => $item->quantite,
-                    'prix_unitaire' => $item->piece->prix
-                ]);
+                // dd($item->piece->user_id);
+                // dd($item->piece->user_id === $request->input('casse'), $item->piece->user_id, (int) $request->input('casse'));
+                if ($item->piece->user_id === (int) $request->input('casse')) {
+                    CommandeItem::create([
+                        'commande_id' => $commande->id,
+                        'piece_id' => $item->piece_id,
+                        'quantite' => $item->quantite,
+                        'prix_unitaire' => $item->piece->prix
+                    ]);
+
+                    $item->delete();
+                }
 
                 // Mettre à jour le stock
                 $item->piece->decrement('quantite', $item->quantite);
@@ -178,7 +196,7 @@ class CommandeController extends Controller
             }
 
             // Vider le panier
-            $panier->items()->delete();
+            // $panier->items()->delete();
 
             // dd($item->piece->user);
 
@@ -288,5 +306,19 @@ class CommandeController extends Controller
         ]);
 
         return back()->with('success', 'Adresse de livraison mise à jour avec votre géolocalisation.');
+    }
+
+    public function delete(Commande $commande)
+    {
+        // $this->authorize('delete', $commande);
+        // dd($commande);
+
+        if ($commande->statut !== 'annulee') {
+            return back()->with('error', 'Seules les commandes annulées peuvent être supprimées.');
+        }
+
+        $commande->delete();
+
+        return redirect()->route('commandes.index')->with('success', 'Commande supprimée avec succès.');
     }
 }

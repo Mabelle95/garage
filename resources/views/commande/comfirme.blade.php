@@ -46,6 +46,7 @@
         <input type="hidden" name="adresse_livraison" value='{{ $client['adresse_livraison'] }}'>
         <input type="hidden" name="telephone_livraison" value='{{ $client['telephone_livraison'] }}'>
         <input type="hidden" name="mode_paiement" value='{{ $client['mode_paiement'] }}'>
+        <input type="hidden" name="casse" value='{{ $casse->id }}'>
 
         <button type="submit" class="btn btn-success px-4 py-2 rounded-pill">
             Confirmer le paiement

@@ -42,10 +42,13 @@ class PanierController extends Controller
                 $totalParItem = $item['quantite'] * $item['piece']['prix'];
                 // $totalParCmd[$casseId] = number_format($totalParItem,2,',',' ');
 
+                // dd($panierParCasse[$casseId][0]['piece']['prix']);
                 if (isset($totalParCmd[$casseId])) {
-                    $panierParCasse[$casseId] += $totalParItem;
+                    $totalParCmd[$casseId] += $totalParItem;
+                    // $panierParCasse[$casseId][0]['piece']['prix'] += $totalParItem;
                 } else {
                     $totalParCmd[$casseId] = $totalParItem;
+                    // $totalParCmd[$casseId] = $totalParItem;
                 }
             }
         }
