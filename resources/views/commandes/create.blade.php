@@ -69,11 +69,12 @@
                             @csrf
 
                             {{-- Information recuperer depuis panier --}}
+                            {{-- @dd($panierCasse) --}}
                             <input type="hidden" name="casse" value="{{ $casse }}">
 
                             <input type="hidden" name="panier_id" value="{{ $panier->id }}">
                             <input type="hidden" name="panier_items" value="{{ $panier->items }}">
-                            <input type="hidden" name="panier_total" id="panier_total" value="{{ $panier->getTotal() }}">
+                            <input type="hidden" name="panier_total" id="panier_total" value="{{ $totalCasse }}">
 
                             <div class="mb-3">
                                 <label for="adresse_livraison" class="form-label">Adresse de livraison *</label>

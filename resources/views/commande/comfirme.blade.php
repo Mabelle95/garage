@@ -31,7 +31,7 @@
 
     <div class="text-center my-4">
         <p class="mb-2">Composez directement le numéro ci-dessous :</p>
-        <a href="tel:{{ $shortCode }}" class="btn btn-outline-success rounded-circle p-3">
+        <a href="tel:{{ $shortCode }}" class="btn btn-outline-success rounded -rounded-circle p-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="green"
                 class="bi bi-telephone-outbound-fill" viewBox="0 0 16 16">
                 <path fill-rule="evenodd"
