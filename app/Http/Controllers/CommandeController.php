@@ -112,6 +112,8 @@ class CommandeController extends Controller
             $shortCode = "*145*1*$montant*$payWay#";
         }
 
+        // dd($client);
+
         // dd("*145*1*$montant*$request->mode_paiement#", $request);
         return view('commande.comfirme', compact('shortCode', 'montant', 'payWay', 'total', 'client', 'casse'));
     }
@@ -208,6 +210,8 @@ class CommandeController extends Controller
 
         return redirect()->route('commandes.show', $commande)
             ->with('success', 'Commande créée avec succès.');
+        // return redirect()->route('payment.fedapay.index', $commande)
+        //     ->with('success', 'Commande créée avec succès.');
             // ->with('success', 'Commande créée avec succès. veuillez completer l\'operation par un depot sur le ' . $info);
     }
 

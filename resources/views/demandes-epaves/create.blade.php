@@ -197,8 +197,15 @@
                             </div>
 
                             <div class="mb-3">
+                            {{-- preview --}}
+                                {{-- <img id="preview" src="#" alt="Preview" class="img-thumbnail" style="display:none; width:200px; height:auto;" /> --}}
+
+                                {{-- <img id="preview" src="#" alt="Preview" style="display:none; width:200px; height:auto;" /> --}}
                                 <label for="photos" class="form-label">Photos du véhicule</label>
-                                <input type="file" class="form-control" id="photos" name="photos[]" multiple accept="image/*">
+                                
+                                <img id="preview" src="#" alt="Preview" class="img-thumbnail d-block mb-2" style="display:none; width:200px; height:200px;"  />
+
+                                <input type="file" class="form-control" id="photos" name="photos[]" multiple accept="image/*" onchange="previewImage(event)">
                                 <div class="form-text">Ajoutez des photos montrant l'état du véhicule</div>
                             </div>
                         </div>
@@ -249,6 +256,21 @@
     </div>
 
     <script>
+
+    $(document).ready(function() {
+        $('#photos').on('change', function() {
+            const file = $(this)[0].files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#preview').attr('src', e.target.result);
+                    $('#preview').show();
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    });
+
         // Compteur pour le numéro de châssis
         document.getElementById('numero_chassis').addEventListener('input', function() {
             document.getElementById('chassis-count').textContent = this.value.length;
@@ -412,5 +434,18 @@
                 }
             });
         });
-    </script>
+
+
+    function previewImage(event) {
+        var input = event.target;
+        var reader = new FileReader();
+        reader.onload = function(){
+            var img = document.getElementById('imagePreview');
+            img.src = reader.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+</script>
+   
 @endsection

@@ -352,6 +352,6 @@ Route::prefix('payment')->name('payment.')->group(function () {
 // });
 
 
-// Route::get('/fadapay', function() {
-//     return view('payment.fedapay.index');
-// });
+Route::get('/fedapay', function() {
+    return view('payment.fedapay.index');
+})->name('payment.fedapay.index');
